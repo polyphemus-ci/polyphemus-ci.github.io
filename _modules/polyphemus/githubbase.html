@@ -1,0 +1,272 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>polyphemus.githubbase &mdash; polyphemus 0.1-dev documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/numpy_friendly.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../_static/cloud.js"></script>
+    <link rel="shortcut icon" href="../../_static/polyphemus.ico"/>
+    <link rel="top" title="polyphemus 0.1-dev documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">polyphemus 0.1-dev documentation</a> &raquo;</li>
+
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for polyphemus.githubbase</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;The plugin to interact with github.</span>
+
+<span class="sd">This module is available as an polyphemus plugin by the name `polyphemus.githubbase`.</span>
+
+<span class="sd">GitHub Basic API</span>
+<span class="sd">=================</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">Sequence</span>
+<span class="kn">from</span> <span class="nn">getpass</span> <span class="kn">import</span> <span class="n">getuser</span><span class="p">,</span> <span class="n">getpass</span>
+<span class="kn">from</span> <span class="nn">tempfile</span> <span class="kn">import</span> <span class="n">NamedTemporaryFile</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="nb">basestring</span> <span class="o">=</span> <span class="nb">str</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">simplejson</span> <span class="kn">as</span> <span class="nn">json</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">github3</span> <span class="kn">import</span> <span class="n">GitHub</span>
+<span class="kn">import</span> <span class="nn">github3.events</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">request</span>
+
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">RunControl</span><span class="p">,</span> <span class="n">NotSpecified</span><span class="p">,</span> <span class="n">writenewonly</span><span class="p">,</span> \
+    <span class="n">DEFAULT_RC_FILE</span><span class="p">,</span> <span class="n">DEFAULT_PLUGINS</span><span class="p">,</span> <span class="n">nyansep</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">check_cmd</span>
+<span class="kn">from</span> <span class="nn">.plugins</span> <span class="kn">import</span> <span class="n">Plugin</span>
+<span class="kn">from</span> <span class="nn">.event</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">runfor</span>
+
+<div class="viewcode-block" id="gh_make_token"><a class="viewcode-back" href="../../api/githubbase.html#polyphemus.githubbase.gh_make_token">[docs]</a><span class="k">def</span> <span class="nf">gh_make_token</span><span class="p">(</span><span class="n">gh</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">credfile</span><span class="o">=</span><span class="s">&#39;gh.cred&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a github token for the user.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gh : GitHub object</span>
+<span class="sd">        The object to authenticate with.</span>
+<span class="sd">    user : str</span>
+<span class="sd">        The username to make the token for.</span>
+<span class="sd">    credfile : str, optional</span>
+<span class="sd">        The github credentials file name.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">password</span><span class="p">:</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="n">getpass</span><span class="p">(</span><span class="s">&quot;{0}&#39;s password: &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="p">))</span>
+    <span class="n">note</span> <span class="o">=</span> <span class="s">&#39;polyphemus application&#39;</span>
+    <span class="n">note_url</span> <span class="o">=</span> <span class="s">&#39;polyphemus.org&#39;</span>
+    <span class="n">scopes</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="s">&#39;repo&#39;</span><span class="p">]</span>
+    <span class="n">auth</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">authorize</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">scopes</span><span class="p">,</span> <span class="n">note</span><span class="p">,</span> <span class="n">note_url</span><span class="p">)</span>
+    <span class="n">writenewonly</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">auth</span><span class="o">.</span><span class="n">token</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">auth</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">credfile</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="ensure_logged_in"><a class="viewcode-back" href="../../api/githubbase.html#polyphemus.githubbase.ensure_logged_in">[docs]</a><span class="k">def</span> <span class="nf">ensure_logged_in</span><span class="p">(</span><span class="n">gh</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">credfile</span><span class="o">=</span><span class="s">&#39;gh.cred&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Ensures that the user is logged in, either through a token or by </span>
+<span class="sd">    creating a token.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gh : GitHub object</span>
+<span class="sd">        The object to authenticate with.</span>
+<span class="sd">    user : str, None, or NotSpecified, optional</span>
+<span class="sd">        The username to log into github with</span>
+<span class="sd">    credfile : str, optional</span>
+<span class="sd">        The github credentials file name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">user</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">user</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">getuser</span><span class="p">()</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&quot;github username not specified, found {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">credfile</span><span class="p">):</span>
+        <span class="n">gh_make_token</span><span class="p">(</span><span class="n">gh</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">credfile</span><span class="o">=</span><span class="n">credfile</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">credfile</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>  
+        <span class="nb">id</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">gh</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="set_pull_request_status"><a class="viewcode-back" href="../../api/githubbase.html#polyphemus.githubbase.set_pull_request_status">[docs]</a><span class="k">def</span> <span class="nf">set_pull_request_status</span><span class="p">(</span><span class="n">pr</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">target_url</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
+                            <span class="n">credfile</span><span class="o">=</span><span class="s">&#39;gh.cred&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets a state for every commit associated ith a pull request.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pr : PullRequest or len-3 sequence</span>
+<span class="sd">        A github3 pull request object or a tuple of (owner, repository, number).</span>
+<span class="sd">    state : str</span>
+<span class="sd">        Accepted values are &#39;pending&#39;, &#39;success&#39;, &#39;error&#39;, &#39;failure&#39;.</span>
+<span class="sd">    target_url : str, optional</span>
+<span class="sd">        URL to link with this status.</span>
+<span class="sd">    description : str, optional</span>
+<span class="sd">        Flavor text.</span>
+<span class="sd">    user : str, None, or NotSpecified, optional</span>
+<span class="sd">        The username to log into github with.</span>
+<span class="sd">    credfile : str, optional</span>
+<span class="sd">        The github credentials file name.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">gh</span> <span class="o">=</span> <span class="n">GitHub</span><span class="p">()</span>
+    <span class="n">ensure_logged_in</span><span class="p">(</span><span class="n">gh</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">credfile</span><span class="o">=</span><span class="n">credfile</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pr</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">):</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">repository</span><span class="p">(</span><span class="o">*</span><span class="n">pr</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">pull_request</span><span class="p">(</span><span class="o">*</span><span class="n">pr</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">r</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">repository</span><span class="p">(</span><span class="o">*</span><span class="n">pr</span><span class="o">.</span><span class="n">repository</span><span class="p">)</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">create_status</span><span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">sha</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">state</span><span class="p">,</span> <span class="n">target_url</span><span class="o">=</span><span class="n">target_url</span><span class="p">,</span> 
+                             <span class="n">description</span><span class="o">=</span><span class="n">description</span><span class="p">)</span>    
+</div>
+<div class="viewcode-block" id="PolyphemusPlugin"><a class="viewcode-back" href="../../api/githubbase.html#polyphemus.githubbase.PolyphemusPlugin">[docs]</a><span class="k">class</span> <span class="nc">PolyphemusPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class provides basic functionality for github interactions.&quot;&quot;&quot;</span>
+
+    <span class="n">requires</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;polyphemus.base&#39;</span><span class="p">,)</span>
+
+    <span class="n">defaultrc</span> <span class="o">=</span> <span class="n">RunControl</span><span class="p">(</span>
+        <span class="n">github_owner</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+        <span class="n">github_repo</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+        <span class="n">github_events</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;pull_request&#39;</span><span class="p">],</span>
+        <span class="n">github_user</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+        <span class="n">github_credentials</span><span class="o">=</span><span class="s">&#39;gh.cred&#39;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">rcdocs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;github_owner&#39;</span><span class="p">:</span> <span class="s">&quot;The repository owner on github, e.g. &#39;scopatz&#39;&quot;</span><span class="p">,</span>
+        <span class="s">&#39;github_repo&#39;</span><span class="p">:</span> <span class="s">&quot;The repository name on github, e.g. &#39;pyne&#39;&quot;</span><span class="p">,</span>
+        <span class="s">&#39;github_events&#39;</span><span class="p">:</span> <span class="s">&quot;The github events to trigger on.&quot;</span><span class="p">,</span>
+        <span class="s">&#39;github_user&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;The github user name to login with.  Must have rights &quot;</span>
+                        <span class="s">&quot;to the repo.&quot;</span><span class="p">),</span>
+        <span class="s">&#39;github_credentials&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;The github credentials file where token &quot;</span>
+                               <span class="s">&quot;authentication is stored.&quot;</span><span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">update_argparser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--github-owner&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;github_owner&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;github_owner&quot;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--github-repo&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;github_repo&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;github_repo&quot;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--github-events&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s">&quot;+&quot;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;github_events&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;github_events&quot;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--github-user&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;github_user&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;github_user&quot;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--github-credentials&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;github_credentials&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;github_credentials&quot;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rc</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">github_owner</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;github_owner run control parameter must be specified &#39;</span>
+                             <span class="s">&#39;to use the githubhook plugin.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">github_repo</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;github_repo run control parameter must be specified &#39;</span>
+                             <span class="s">&#39;to use the githubhook plugin.&#39;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="../../index.html">
+          <img class="logo" src="../../_static/polyphemus.gif" alt="Logo"/>
+        </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">polyphemus 0.1-dev documentation</a> &raquo;</li>
+
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Anthony Scopatz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

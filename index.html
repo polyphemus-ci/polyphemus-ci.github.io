@@ -1,0 +1,235 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Polyphemus-CI &mdash; polyphemus 0.1-dev documentation</title>
+    
+    <link rel="stylesheet" href="_static/numpy_friendly.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.js"></script>
+    <link rel="shortcut icon" href="_static/polyphemus.ico"/>
+    <link rel="top" title="polyphemus 0.1-dev documentation" href="#" />
+    <link rel="next" title="Tutorial" href="tutorial.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+    <li><a href="#">polyphemus 0.1-dev documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="polyphemus-ci">
+<h1>Polyphemus-CI<a class="headerlink" href="#polyphemus-ci" title="Permalink to this headline">¶</a></h1>
+<p style="text-align:center;">
+<span style="font-family:Times;font-size:28px;font-style:normal;font-weight:normal;text-decoration:none;text-transform:none;font-variant:small-caps;color:000000;">
+<br />
+~ One eye makes for shallow bugs ~
+<br />
+<br />
+</span>
+</p><p>Polyphemus is a continuous integration tool that front-ends to
+<a class="reference external" href="https://github.com/">GitHub</a> et al. and backends to
+<a class="reference external" href="https://www.batlab.org/">BaTLaB</a>.  This fills a similar role to that of Travis-CI
+or the GitHub plugin for Jenkins.  However, BaTLab has a wider vareity of machines
+than Travis-CI and is cheaper (free) than running your own machines with Jenkins.</p>
+<div class="section" id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/index.html">Polyphemus API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rcdocs.html">Run Control Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="previous/index.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faq.html">Frequently Asked Questions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="authors.html">Authors</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Since polyphemus is pure Python code, the <tt class="docutils literal"><span class="pre">pip</span></tt> or <tt class="docutils literal"><span class="pre">easy_install</span></tt> may be used
+to grab and install the code:</p>
+<div class="highlight-python"><pre>$ pip install polyphemus
+
+$ easy_install polyphemus</pre>
+</div>
+<p>The source code repository for polyphemus may be found at the
+<a class="reference external" href="http://github.com/polyphemus-ci/polyphemus">GitHub project site</a>.
+You may simply clone the development branch using git:</p>
+<div class="highlight-python"><pre>git clone git://github.com/polyphemus-ci/polyphemus.git</pre>
+</div>
+<p>Also, if you wish to have the optional BASH completion, please add the
+following lines to your <tt class="docutils literal"><span class="pre">~/.bashrc</span></tt> file:</p>
+<div class="highlight-python"><pre># Enable completion for polyphemus
+eval "$(register-python-argcomplete polyphemus)"</pre>
+</div>
+</div>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>Polyphemus currently has the following external dependencies,</p>
+<p><em>Run Time:</em></p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><a class="reference external" href="http://flask.pocoo.org/">flask</a></li>
+<li><a class="reference external" href="http://www.lag.net/paramiko/">paramiko</a></li>
+<li><a class="reference external" href="https://pypi.python.org/pypi/scp">python&#8217;s scp</a></li>
+<li><a class="reference external" href="http://github3py.readthedocs.org/en/latest/">github3.py</a>, optional for github</li>
+<li><a class="reference external" href="http://httpd.apache.org/">apache 2</a>, optional for real depolyment</li>
+<li><a class="reference external" href="https://argcomplete.readthedocs.org/en/latest/">argcomplete</a>, optional for BASH completion</li>
+</ol>
+</div></blockquote>
+</div>
+<div class="section" id="contact-us">
+<h2>Contact Us<a class="headerlink" href="#contact-us" title="Permalink to this headline">¶</a></h2>
+<p>If you have questions or comments, please send them to the mailing list
+<a class="reference external" href="mailto:polyphemus-ci&#37;&#52;&#48;googlegroups&#46;com">polyphemus-ci<span>&#64;</span>googlegroups<span>&#46;</span>com</a> or contact the author directly or open an issue on
+GitHub.
+<a class="reference external" href="https://groups.google.com/forum/#!forum/polyphemus-ci">Join the mailing list here!</a></p>
+</div>
+<div class="section" id="contributing">
+<h2>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h2>
+<p>We highly encourage contributions to polyphemus!  If you would like to contribute,
+it is as easy as forking the repository on GitHub, making your changes, and
+issuing a pull request.  If you have any questions about this process don&#8217;t
+hesitate to ask the mailing list (<a class="reference external" href="mailto:polyphemus-ci&#37;&#52;&#48;googlegroups&#46;com">polyphemus-ci<span>&#64;</span>googlegroups<span>&#46;</span>com</a>). We are particularly
+interested in adding bitbucket and mercurial support.</p>
+</div>
+<div class="section" id="helpful-links">
+<h2>Helpful Links<a class="headerlink" href="#helpful-links" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><a class="reference external" href="http://polyphemus.org">Documentation</a></li>
+<li><a class="reference external" href="https://groups.google.com/forum/#!forum/polyphemus-ci">Mailing list</a></li>
+<li><a class="reference internal" href="genindex.html"><em>Index</em></a></li>
+<li><a class="reference internal" href="py-modindex.html"><em>Module Index</em></a></li>
+<li><a class="reference internal" href="search.html"><em>Search Page</em></a></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="#">
+          <img class="logo" src="_static/polyphemus.gif" alt="Logo"/>
+        </a></p>
+  <div class="sphinxlocaltoc">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Polyphemus-CI</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li><a class="reference internal" href="#contact-us">Contact Us</a></li>
+<li><a class="reference internal" href="#contributing">Contributing</a></li>
+<li><a class="reference internal" href="#helpful-links">Helpful Links</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="tutorial.html"
+                        title="next chapter">Tutorial</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="tutorial.html" title="Tutorial"
+             >next</a> &nbsp; &nbsp;</li>
+    <li><a href="#">polyphemus 0.1-dev documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Anthony Scopatz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

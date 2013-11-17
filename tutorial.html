@@ -31,7 +31,7 @@
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="shortcut icon" href="_static/polyphemus.ico"/>
     <link rel="top" title="polyphemus 0.1-dev documentation" href="index.html" />
-    <link rel="next" title="Polyphemus API" href="api/index.html" />
+    <link rel="next" title="Polyphemus Continuous Integration" href="batlab.html" />
     <link rel="prev" title="Polyphemus-CI" href="index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
@@ -51,7 +51,7 @@
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
         <li class="right" >
-          <a href="api/index.html" title="Polyphemus API"
+          <a href="batlab.html" title="Polyphemus Continuous Integration"
              accesskey="N">next</a> &nbsp; &nbsp;</li>
         <li class="right" >
           <a href="index.html" title="Polyphemus-CI"
@@ -76,8 +76,22 @@ GitHub to the build &amp; test laboratory (BaTLab).</p>
 <h2>Putting It All Together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this headline">¶</a></h2>
 <p>The following is a more complete, realistic example of a polyphemusrc.py file that
 one might run across in a production level environment.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># GitHub Parameters</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Generic parameters</span>
+<span class="n">server_url</span> <span class="o">=</span> <span class="s">&#39;198.101.154.53&#39;</span>  <span class="c"># the URL or IP address where Polyphemus is running</span>
+<span class="n">port</span> <span class="o">=</span> <span class="mi">8080</span>  <span class="c"># The port to run Polyphemus on</span>
+
+<span class="c"># GitHub Parameters</span>
 <span class="n">github_user</span> <span class="o">=</span> <span class="s">&#39;scopatz&#39;</span>  <span class="c"># a user name with rights to the target repository</span>
+<span class="n">github_owner</span> <span class="o">=</span> <span class="s">&#39;cyclus&#39;</span>  <span class="c"># the user or organization that owns the repo</span>
+<span class="n">github_repo</span> <span class="o">=</span> <span class="s">&#39;cyclus&#39;</span>   <span class="c"># the repo name</span>
+
+<span class="c"># BaTLab Parameters</span>
+<span class="n">batlab_user</span> <span class="o">=</span> <span class="s">&#39;cyclusci&#39;</span>  <span class="c"># The BaTLab username</span>
+<span class="n">batlab_run_spec</span> <span class="o">=</span> <span class="s">&#39;cyclus.run-spec&#39;</span>  <span class="c"># top-level run specification</span>
+<span class="c"># the fetch file, will be overwritten with pull request location</span>
+<span class="n">batlab_fetch_file</span> <span class="o">=</span> <span class="s">&#39;fetch/cyclus.git&#39;</span>
+<span class="c"># Location to grab batlab scripts from, may be a zip file or a git repo</span>
+<span class="n">batlab_scripts_url</span> <span class="o">=</span> <span class="s">&#39;https://github.com/cyclus/ciclus/archive/master.zip&#39;</span>
 </pre></div>
 </div>
 </div>
@@ -106,8 +120,8 @@ one might run across in a production level environment.</p>
   <p class="topless"><a href="index.html"
                         title="previous chapter">Polyphemus-CI</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="api/index.html"
-                        title="next chapter">Polyphemus API</a></p>
+  <p class="topless"><a href="batlab.html"
+                        title="next chapter">Polyphemus Continuous Integration</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/tutorial.txt"
@@ -145,7 +159,7 @@ one might run across in a production level environment.</p>
           <a href="np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
         <li class="right" >
-          <a href="api/index.html" title="Polyphemus API"
+          <a href="batlab.html" title="Polyphemus Continuous Integration"
              >next</a> &nbsp; &nbsp;</li>
         <li class="right" >
           <a href="index.html" title="Polyphemus-CI"

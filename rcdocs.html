@@ -90,7 +90,8 @@ relevant when using argcomplete., <em>default:</em> True.</td>
 yourself, <em>default:</em> &#8216;0.0.0.0&#8217;.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">plugins:</th><td class="field-body">Plugins to include, <em>default:</em> (&#8216;polyphemus.base&#8217;,
-&#8216;polyphemus.github&#8217;, &#8216;polyphemus.batlab&#8217;).</td>
+&#8216;polyphemus.githubhook&#8217;, &#8216;polyphemus.batlabrun&#8217;, &#8216;polyphemus.batlabstat&#8217;,
+&#8216;polyphemus.githubstat&#8217;).</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">port:</th><td class="field-body">The port to run the application on., <em>default:</em> 80.</td>
 </tr>
@@ -125,6 +126,41 @@ submit node., <em>default:</em> NotSpecified.</td>
 </div>
 <div class="section" id="polyphemus-batlabrun">
 <h2>polyphemus.batlabrun<a class="headerlink" href="#polyphemus-batlabrun" title="Permalink to this headline">¶</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">batlab_fetch_file:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The fetch file that is used by BaTLab to grab the project
+source code.  This file will be overwritten by polyphemus. This should be a
+relative path from the base of the batlab_scripts_url dir., <em>default:</em>
+NotSpecified.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">batlab_jobs_cache:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">The cache file for currently running BaTLab jobs.,
+<em>default:</em> &#8216;jobs.cache&#8217;.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">batlab_kill_cmd:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The command that is used to kill existing jobs on BaTLab.,
+<em>default:</em> &#8216;nmi_rm&#8217;.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">batlab_run_spec:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">The top level <em>.run-spec file that is submitted to BaTLab.
+This should be a relative path from the base of the batlab_scripts_url dir.,
+*default:</em> NotSpecified.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">batlab_scripts_url:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">This is the URL where the BaTLab files may be found. If
+this ends in &#8216;.git&#8217; then it is interperted as a git repository and the whole
+repo is cloned.  If this ends in &#8216;.zip&#8217; then the URL is downloaded and
+unpacked., <em>default:</em> NotSpecified.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">batlab_submit_cmd:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">The command that is used to submit jobs to BaTLab.,
+<em>default:</em> &#8216;nmi_submit&#8217;.</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section" id="polyphemus-batlabstat">
 <h2>polyphemus.batlabstat<a class="headerlink" href="#polyphemus-batlabstat" title="Permalink to this headline">¶</a></h2>

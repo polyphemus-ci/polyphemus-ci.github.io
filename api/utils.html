@@ -76,6 +76,30 @@
 <div class="section" id="utilities-api">
 <h2>Utilities API<a class="headerlink" href="#utilities-api" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
+<dt id="polyphemus.utils.PersistentCache">
+<em class="property">class </em><tt class="descclassname">polyphemus.utils.</tt><tt class="descname">PersistentCache</tt><big>(</big><em>cachefile='cache.pkl'</em><big>)</big><a class="headerlink" href="#polyphemus.utils.PersistentCache" title="Permalink to this definition">¶</a></dt>
+<dd><p>A quick persistent cache.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>cachefile</strong> : str, optional</p>
+<blockquote class="last">
+<div><p>Path to description cachefile.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="polyphemus.utils.PersistentCache.dump">
+<tt class="descname">dump</tt><big>(</big><big>)</big><a class="headerlink" href="#polyphemus.utils.PersistentCache.dump" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the cache out to the filesystem.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="polyphemus.utils.RunControl">
 <em class="property">class </em><tt class="descclassname">polyphemus.utils.</tt><tt class="descname">RunControl</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/polyphemus/utils.html#RunControl"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polyphemus.utils.RunControl" title="Permalink to this definition">¶</a></dt>
 <dd><p>A composable configuration class. Unlike argparse.Namespace,
@@ -264,7 +288,7 @@ Useful for not tocuhing files.</p>
 
 <dl class="data">
 <dt id="polyphemus.utils.DEFAULT_PLUGINS">
-<tt class="descclassname">polyphemus.utils.</tt><tt class="descname">DEFAULT_PLUGINS</tt><em class="property"> = ('polyphemus.base', 'polyphemus.github', 'polyphemus.batlab')</em><a class="headerlink" href="#polyphemus.utils.DEFAULT_PLUGINS" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">polyphemus.utils.</tt><tt class="descname">DEFAULT_PLUGINS</tt><em class="property"> = ('polyphemus.base', 'polyphemus.githubhook', 'polyphemus.batlabrun', 'polyphemus.batlabstat', 'polyphemus.githubstat')</em><a class="headerlink" href="#polyphemus.utils.DEFAULT_PLUGINS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Default list of plugin module names.</p>
 </dd></dl>
 

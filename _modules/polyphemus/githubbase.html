@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>polyphemus.githubbase &mdash; polyphemus 0.1-dev documentation</title>
+    <title>polyphemus.githubbase &mdash; polyphemus 0.1 documentation</title>
     
     <link rel="stylesheet" href="../../_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.1-dev',
+        VERSION:     '0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
     <script type="text/javascript" src="../../_static/cloud.js"></script>
     <link rel="shortcut icon" href="../../_static/polyphemus.ico"/>
-    <link rel="top" title="polyphemus 0.1-dev documentation" href="../../index.html" />
+    <link rel="top" title="polyphemus 0.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
@@ -49,7 +49,7 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
-    <li><a href="../../index.html">polyphemus 0.1-dev documentation</a> &raquo;</li>
+    <li><a href="../../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
 
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -89,11 +89,11 @@
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">json</span>
 
-<span class="kn">from</span> <span class="nn">github3</span> <span class="kn">import</span> <span class="n">GitHub</span>
+<span class="kn">from</span> <span class="nn">github3</span> <span class="kn">import</span> <span class="n">GitHub</span><span class="p">,</span> <span class="n">pull_request</span><span class="p">,</span> <span class="n">repository</span>
 <span class="kn">import</span> <span class="nn">github3.events</span>
 <span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">request</span>
 
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">RunControl</span><span class="p">,</span> <span class="n">NotSpecified</span><span class="p">,</span> <span class="n">writenewonly</span><span class="p">,</span> \
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">RunControl</span><span class="p">,</span> <span class="n">NotSpecified</span><span class="p">,</span> <span class="n">writenewonly</span><span class="p">,</span> <span class="n">newoverwrite</span><span class="p">,</span> \
     <span class="n">DEFAULT_RC_FILE</span><span class="p">,</span> <span class="n">DEFAULT_PLUGINS</span><span class="p">,</span> <span class="n">nyansep</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">check_cmd</span>
 <span class="kn">from</span> <span class="nn">.plugins</span> <span class="kn">import</span> <span class="n">Plugin</span>
 <span class="kn">from</span> <span class="nn">.event</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">runfor</span>
@@ -113,12 +113,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">password</span> <span class="o">=</span> <span class="bp">False</span>
     <span class="k">while</span> <span class="ow">not</span> <span class="n">password</span><span class="p">:</span>
-        <span class="n">password</span> <span class="o">=</span> <span class="n">getpass</span><span class="p">(</span><span class="s">&quot;{0}&#39;s password: &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="p">))</span>
+        <span class="n">password</span> <span class="o">=</span> <span class="n">getpass</span><span class="p">(</span><span class="s">&quot;{0}&#39;s github password: &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="p">))</span>
     <span class="n">note</span> <span class="o">=</span> <span class="s">&#39;polyphemus application&#39;</span>
     <span class="n">note_url</span> <span class="o">=</span> <span class="s">&#39;polyphemus.org&#39;</span>
     <span class="n">scopes</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;user&#39;</span><span class="p">,</span> <span class="s">&#39;repo&#39;</span><span class="p">]</span>
     <span class="n">auth</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">authorize</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">scopes</span><span class="p">,</span> <span class="n">note</span><span class="p">,</span> <span class="n">note_url</span><span class="p">)</span>
-    <span class="n">writenewonly</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">auth</span><span class="o">.</span><span class="n">token</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">auth</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">credfile</span><span class="p">)</span>
+    <span class="n">newoverwrite</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">auth</span><span class="o">.</span><span class="n">token</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">auth</span><span class="o">.</span><span class="n">id</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">credfile</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="ensure_logged_in"><a class="viewcode-back" href="../../api/githubbase.html#polyphemus.githubbase.ensure_logged_in">[docs]</a><span class="k">def</span> <span class="nf">ensure_logged_in</span><span class="p">(</span><span class="n">gh</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">credfile</span><span class="o">=</span><span class="s">&#39;gh.cred&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Ensures that the user is logged in, either through a token or by </span>
@@ -142,6 +142,33 @@
         <span class="n">token</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>  
         <span class="nb">id</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
     <span class="n">gh</span><span class="o">.</span><span class="n">login</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">token</span><span class="o">=</span><span class="n">token</span><span class="p">)</span>
+</div>
+<span class="n">_stat_key</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="n">s</span><span class="o">.</span><span class="n">created_at</span>
+
+<div class="viewcode-block" id="get_pull_request_status"><a class="viewcode-back" href="../../api/githubbase.html#polyphemus.githubbase.get_pull_request_status">[docs]</a><span class="k">def</span> <span class="nf">get_pull_request_status</span><span class="p">(</span><span class="n">gh</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">pr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets a state for every commit associated with a pull request.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gh : GitHub</span>
+<span class="sd">        A logged in GitHub instance</span>
+<span class="sd">    r : Repository</span>
+<span class="sd">        A github3 repository objects</span>
+<span class="sd">    pr : PullRequest or len-3 sequence</span>
+<span class="sd">        A github3 pull request object or a tuple of (owner, repository, number).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    status : Status or None</span>
+<span class="sd">        The latest pull request status or None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pr</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">):</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="n">gh</span><span class="o">.</span><span class="n">pull_request</span><span class="p">(</span><span class="o">*</span><span class="n">pr</span><span class="p">)</span>
+    <span class="n">statuses</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">iter_statuses</span><span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">sha</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">_stat_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">statuses</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">statuses</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </div>
 <div class="viewcode-block" id="set_pull_request_status"><a class="viewcode-back" href="../../api/githubbase.html#polyphemus.githubbase.set_pull_request_status">[docs]</a><span class="k">def</span> <span class="nf">set_pull_request_status</span><span class="p">(</span><span class="n">pr</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">target_url</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">user</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> 
                             <span class="n">credfile</span><span class="o">=</span><span class="s">&#39;gh.cred&#39;</span><span class="p">):</span>
@@ -256,7 +283,7 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
-    <li><a href="../../index.html">polyphemus 0.1-dev documentation</a> &raquo;</li>
+    <li><a href="../../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
 
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>

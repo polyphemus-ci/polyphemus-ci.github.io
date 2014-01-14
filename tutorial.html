@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; polyphemus 0.1-dev documentation</title>
+    <title>Tutorial &mdash; polyphemus 0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.1-dev',
+        VERSION:     '0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="shortcut icon" href="_static/polyphemus.ico"/>
-    <link rel="top" title="polyphemus 0.1-dev documentation" href="index.html" />
+    <link rel="top" title="polyphemus 0.1 documentation" href="index.html" />
     <link rel="next" title="Polyphemus Continuous Integration" href="batlab.html" />
     <link rel="prev" title="Polyphemus-CI" href="index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -56,7 +56,7 @@
         <li class="right" >
           <a href="index.html" title="Polyphemus-CI"
              accesskey="P">previous</a> &nbsp; &nbsp;</li>
-    <li><a href="index.html">polyphemus 0.1-dev documentation</a> &raquo;</li>
+    <li><a href="index.html">polyphemus 0.1 documentation</a> &raquo;</li>
  
       </ul>
     </div>
@@ -71,27 +71,79 @@
   <div class="section" id="tutorial">
 <span id="id1"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
 <p>Polyphemus is a continuous integration tool that ties together services like
-GitHub to the build &amp; test laboratory (BaTLab).</p>
+GitHub to the build &amp; test laboratory (BaTLab). There are many options that you
+might include.</p>
 <div class="section" id="putting-it-all-together">
 <h2>Putting It All Together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this headline">¶</a></h2>
-<p>The following is a more complete, realistic example of a polyphemusrc.py file that
+<p>The following is a more complete, realistic example of a <cite>polyphemusrc.py</cite> file that
 one might run across in a production level environment.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="c"># Generic parameters</span>
-<span class="n">server_url</span> <span class="o">=</span> <span class="s">&#39;198.101.154.53&#39;</span>  <span class="c"># the URL or IP address where Polyphemus is running</span>
-<span class="n">port</span> <span class="o">=</span> <span class="mi">8080</span>  <span class="c"># The port to run Polyphemus on</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Generic Settings</span>
+<span class="c"># the URL or IP address where Polyphemus is running</span>
+<span class="n">server_name</span> <span class="o">=</span> <span class="n">server_url</span> <span class="o">=</span> <span class="s">&#39;cycamore-ci.fuelcycle.org&#39;</span>
+<span class="c"># The port to run Polyphemus on</span>
+<span class="n">port</span> <span class="o">=</span> <span class="mi">80</span>
 
-<span class="c"># GitHub Parameters</span>
-<span class="n">github_user</span> <span class="o">=</span> <span class="s">&#39;scopatz&#39;</span>  <span class="c"># a user name with rights to the target repository</span>
-<span class="n">github_owner</span> <span class="o">=</span> <span class="s">&#39;cyclus&#39;</span>  <span class="c"># the user or organization that owns the repo</span>
-<span class="n">github_repo</span> <span class="o">=</span> <span class="s">&#39;cyclus&#39;</span>   <span class="c"># the repo name</span>
+<span class="c"># GitHub settings</span>
+<span class="c"># a user name with rights to the target repository</span>
+<span class="n">github_user</span> <span class="o">=</span> <span class="s">&#39;cyclus-ci&#39;</span>
+<span class="c"># the user or organization that owns the repo</span>
+<span class="n">github_owner</span> <span class="o">=</span> <span class="s">&#39;cyclus&#39;</span>
+<span class="c"># the repo name</span>
+<span class="n">github_repo</span> <span class="o">=</span> <span class="s">&#39;cycamore&#39;</span>
+<span class="c"># local file to store github login info</span>
+<span class="n">github_credentials</span> <span class="o">=</span> <span class="s">&#39;/root/polyphemusrc/gh.cred&#39;</span>
 
-<span class="c"># BaTLab Parameters</span>
-<span class="n">batlab_user</span> <span class="o">=</span> <span class="s">&#39;cyclusci&#39;</span>  <span class="c"># The BaTLab username</span>
-<span class="n">batlab_run_spec</span> <span class="o">=</span> <span class="s">&#39;cyclus.run-spec&#39;</span>  <span class="c"># top-level run specification</span>
-<span class="c"># the fetch file, will be overwritten with pull request location</span>
-<span class="n">batlab_fetch_file</span> <span class="o">=</span> <span class="s">&#39;fetch/cyclus.git&#39;</span>
+<span class="c"># BaTLab settings</span>
+<span class="c"># The BaTLab username</span>
+<span class="n">batlab_user</span> <span class="o">=</span> <span class="s">&#39;cyclusci&#39;</span>
 <span class="c"># Location to grab batlab scripts from, may be a zip file or a git repo</span>
 <span class="n">batlab_scripts_url</span> <span class="o">=</span> <span class="s">&#39;https://github.com/cyclus/ciclus/archive/master.zip&#39;</span>
+<span class="c"># the fetch file, will be overwritten with pull request location</span>
+<span class="n">batlab_fetch_file</span> <span class="o">=</span> <span class="s">&#39;fetch/cycamore.git&#39;</span>
+<span class="c"># top-level run specification</span>
+<span class="n">batlab_run_spec</span> <span class="o">=</span> <span class="s">&#39;cycamore.fast.run-spec&#39;</span>
+<span class="c"># Optional custom batlab submission command</span>
+<span class="n">batlab_submit_cmd</span> <span class="o">=</span> <span class="s">&#39;./submit.sh&#39;</span>
+
+<span class="c"># Apache settings</span>
+<span class="c"># Directory for log file, must be writeable and exist.</span>
+<span class="n">log_dir</span> <span class="o">=</span> <span class="s">&#39;/root/polyphemusrc&#39;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rackspace-install">
+<h2>Rackspace Install<a class="headerlink" href="#rackspace-install" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Install Dependencies</span>
+apt-get install -y  git python-argcomplete python-flask python-paramiko apache2 libapache2-mod-wsgi
+easy_install github3.py
+service apache2 stop
+
+<span class="c"># Install Polyphemus</span>
+git clone https://github.com/polyphemus-ci/polyphemus
+<span class="nb">cd </span>polyphemus
+python setup.py install
+<span class="nb">cd</span> ..
+
+<span class="c"># Make SSH key (if you haven&#39;t done so)</span>
+ssh-keygen -t rsa
+
+<span class="c"># Get run control files</span>
+git clone https://github.com/cyclus/polyphemusrc
+<span class="nb">cd </span>polyphemusrc
+
+<span class="c"># Setup polyphemus for a given run control file,</span>
+<span class="c"># kill these commands with ^C after they start</span>
+polyphemus --rc cyclusrc.py
+polyphemus --rc cyclusrc.py --plugins polyphemus.apache2 --apache2-setup
+a2ensite cyclus-ci.fuelcycle.org
+
+<span class="c"># Verify permissions for apache</span>
+cp -r ~/.ssh/ /var/www/.ssh
+chmod +rx /var/www/ /var/www/.ssh /root /root/polyphemusrc
+chmod +r /var/www/.ssh/id_rsa
+
+<span class="c"># Start apache!</span>
+service apache2 start
 </pre></div>
 </div>
 </div>
@@ -111,6 +163,7 @@ one might run across in a production level environment.</p>
   <ul>
 <li><a class="reference internal" href="#">Tutorial</a><ul>
 <li><a class="reference internal" href="#putting-it-all-together">Putting It All Together</a></li>
+<li><a class="reference internal" href="#rackspace-install">Rackspace Install</a></li>
 </ul>
 </li>
 </ul>
@@ -164,7 +217,7 @@ one might run across in a production level environment.</p>
         <li class="right" >
           <a href="index.html" title="Polyphemus-CI"
              >previous</a> &nbsp; &nbsp;</li>
-    <li><a href="index.html">polyphemus 0.1-dev documentation</a> &raquo;</li>
+    <li><a href="index.html">polyphemus 0.1 documentation</a> &raquo;</li>
  
       </ul>
     </div>

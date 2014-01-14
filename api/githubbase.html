@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>GitHub Base Plugin &mdash; polyphemus 0.1-dev documentation</title>
+    <title>GitHub Base Plugin &mdash; polyphemus 0.1 documentation</title>
     
     <link rel="stylesheet" href="../_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../',
-        VERSION:     '0.1-dev',
+        VERSION:     '0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../_static/jquery.cookie.js"></script>
     <script type="text/javascript" src="../_static/cloud.js"></script>
     <link rel="shortcut icon" href="../_static/polyphemus.ico"/>
-    <link rel="top" title="polyphemus 0.1-dev documentation" href="../index.html" />
+    <link rel="top" title="polyphemus 0.1 documentation" href="../index.html" />
     <link rel="up" title="Polyphemus API" href="index.html" />
     <link rel="next" title="GitHub Hook Plugin" href="githubhook.html" />
     <link rel="prev" title="GitHub Plugin" href="github.html" /> 
@@ -57,7 +57,7 @@
         <li class="right" >
           <a href="github.html" title="GitHub Plugin"
              accesskey="P">previous</a> &nbsp; &nbsp;</li>
-    <li><a href="../index.html">polyphemus 0.1-dev documentation</a> &raquo;</li>
+    <li><a href="../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
 
           <li><a href="index.html" accesskey="U">Polyphemus API</a> &raquo;</li> 
       </ul>
@@ -103,6 +103,38 @@ creating a token.</p>
 <p><strong>credfile</strong> : str, optional</p>
 <blockquote class="last">
 <div><p>The github credentials file name.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="polyphemus.githubbase.get_pull_request_status">
+<tt class="descclassname">polyphemus.githubbase.</tt><tt class="descname">get_pull_request_status</tt><big>(</big><em>gh</em>, <em>r</em>, <em>pr</em><big>)</big><a class="reference internal" href="../_modules/polyphemus/githubbase.html#get_pull_request_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polyphemus.githubbase.get_pull_request_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets a state for every commit associated with a pull request.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><p class="first"><strong>gh</strong> : GitHub</p>
+<blockquote>
+<div><p>A logged in GitHub instance</p>
+</div></blockquote>
+<p><strong>r</strong> : Repository</p>
+<blockquote>
+<div><p>A github3 repository objects</p>
+</div></blockquote>
+<p><strong>pr</strong> : PullRequest or len-3 sequence</p>
+<blockquote>
+<div><p>A github3 pull request object or a tuple of (owner, repository, number).</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns :</th><td class="field-body"><p class="first"><strong>status</strong> : Status or None</p>
+<blockquote class="last">
+<div><p>The latest pull request status or None</p>
 </div></blockquote>
 </td>
 </tr>
@@ -244,7 +276,7 @@ creating a token.</p>
         <li class="right" >
           <a href="github.html" title="GitHub Plugin"
              >previous</a> &nbsp; &nbsp;</li>
-    <li><a href="../index.html">polyphemus 0.1-dev documentation</a> &raquo;</li>
+    <li><a href="../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
 
           <li><a href="index.html" >Polyphemus API</a> &raquo;</li> 
       </ul>

@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>polyphemus.apache2 &mdash; polyphemus 0.1-dev documentation</title>
+    <title>polyphemus.apache2 &mdash; polyphemus 0.1 documentation</title>
     
     <link rel="stylesheet" href="../../_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.1-dev',
+        VERSION:     '0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
     <script type="text/javascript" src="../../_static/cloud.js"></script>
     <link rel="shortcut icon" href="../../_static/polyphemus.ico"/>
-    <link rel="top" title="polyphemus 0.1-dev documentation" href="../../index.html" />
+    <link rel="top" title="polyphemus 0.1 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
@@ -49,7 +49,7 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
-    <li><a href="../../index.html">polyphemus 0.1-dev documentation</a> &raquo;</li>
+    <li><a href="../../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
 
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -77,21 +77,59 @@
 
 <span class="kn">from</span> <span class="nn">event</span> <span class="kn">import</span> <span class="n">runfor</span>
 
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">RunControl</span><span class="p">,</span> <span class="n">NotSpecified</span><span class="p">,</span> <span class="n">writenewonly</span><span class="p">,</span> \
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">RunControl</span><span class="p">,</span> <span class="n">NotSpecified</span><span class="p">,</span> <span class="n">writenewonly</span><span class="p">,</span> <span class="n">newoverwrite</span><span class="p">,</span> \
     <span class="n">DEFAULT_RC_FILE</span><span class="p">,</span> <span class="n">DEFAULT_PLUGINS</span><span class="p">,</span> <span class="n">nyansep</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">check_cmd</span>
 <span class="kn">from</span> <span class="nn">.plugins</span> <span class="kn">import</span> <span class="n">Plugin</span>
 
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
     <span class="nb">basestring</span> <span class="o">=</span> <span class="nb">str</span>
 
-<span class="n">conf_template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;&lt;VirtualHost *:{port}&gt;</span>
-<span class="s">    ServerName {sever_name}</span>
+<span class="n">conf_template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s">ServerName {server_name}</span>
+
+<span class="s">&lt;VirtualHost {server_name}:{port}&gt;</span>
 <span class="s">    ServerAlias www.{server_name}</span>
 <span class="s">    WSGIScriptAlias / {wsgi_file}</span>
+<span class="s">    DocumentRoot {rc_dir}</span>
+
+<span class="s">&lt;Directory {wsgi_dir}&gt;</span>
+<span class="s">        Order allow,deny</span>
+<span class="s">        Allow from all</span>
+<span class="s">    &lt;/Directory&gt;</span>
+
+
+<span class="s">     # ---- Configure Logging ----</span>
+
+<span class="s">    ErrorLog {log_dir}/error.log</span>
+<span class="s">    LogLevel info</span>
+<span class="s">    CustomLog {log_dir}/access.log combined</span>
+
+
 <span class="s">&lt;/VirtualHost&gt;</span>
 <span class="s">&quot;&quot;&quot;</span>
 
+<span class="n">port_template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span>
+<span class="s"># If you just change the port or add more ports here, you will likely also</span>
+<span class="s"># have to change the VirtualHost statement in</span>
+<span class="s"># /etc/apache2/sites-enabled/000-default</span>
+
+<span class="s">Listen 80</span>
+
+<span class="s">Listen {port}</span>
+
+<span class="s">&lt;IfModule ssl_module&gt;</span>
+<span class="s">	Listen 443</span>
+<span class="s">&lt;/IfModule&gt;</span>
+
+<span class="s">&lt;IfModule mod_gnutls.c&gt;</span>
+<span class="s">	Listen 443</span>
+<span class="s">&lt;/IfModule&gt;</span>
+
+<span class="s">&quot;&quot;&quot;</span>
+
 <span class="n">wsgi_template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;import polyphemus.main</span>
+<span class="s">import sys</span>
+<span class="s">sys.stdout = sys.stderr</span>
 <span class="s">application = polyphemus.main.setup(rc={rc!r}).rc.app</span>
 <span class="s">&quot;&quot;&quot;</span>
 
@@ -116,6 +154,8 @@
                            <span class="s">&quot;&#39;/etc/apache2/sites-available/{server_name}.conf&#39;&quot;</span><span class="p">),</span>
         <span class="s">&#39;wsgi_file&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;The WSGI script file name, defaults to &quot;</span>
                       <span class="s">&quot;&#39;/var/www/{appname}/{appname}.wsgi&#39;&quot;</span><span class="p">),</span>
+        <span class="s">&#39;port_file&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;The Apache 2 ports.conf file, defaults to /etc/apache2/ports.conf&quot;</span><span class="p">),</span>
+        <span class="s">&#39;log_dir&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;The directory for apache logging, defaults to /apache-logs&quot;</span><span class="p">)</span>
         <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">update_argparser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
@@ -130,6 +170,10 @@
                             <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&#39;site_conf_file&#39;</span><span class="p">])</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--wsgi-file&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;wsgi_file&#39;</span><span class="p">,</span> 
                             <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&#39;wsgi_file&#39;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--port-file&#39;</span><span class="p">,</span><span class="n">dest</span><span class="o">=</span><span class="s">&#39;port_file&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&#39;port_file&#39;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--log-dir&#39;</span><span class="p">,</span><span class="n">dest</span><span class="o">=</span><span class="s">&#39;log_dir&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&#39;log_dir&#39;</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rc</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">server_name</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
@@ -139,14 +183,38 @@
             <span class="n">rc</span><span class="o">.</span><span class="n">site_conf_file</span> <span class="o">=</span> <span class="n">scf</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">server_name</span><span class="p">)</span>
         <span class="n">rc</span><span class="o">.</span><span class="n">site_conf_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">site_conf_file</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">wsgi_file</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
-            <span class="n">rc</span><span class="o">.</span><span class="n">wsgi_file</span> <span class="o">=</span> <span class="s">&#39;/var/www/{0}/{0}.wsgi&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">appname</span><span class="p">)</span>
+            <span class="n">rc</span><span class="o">.</span><span class="n">wsgi_file</span> <span class="o">=</span> <span class="s">&#39;/var/www/{0}/{0}.wsgi&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">server_name</span><span class="p">)</span>
         <span class="n">rc</span><span class="o">.</span><span class="n">wsgi_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">wsgi_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">log_dir</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">rc</span><span class="o">.</span><span class="n">log_dir</span> <span class="o">=</span> <span class="s">&#39;/apache-logs&#39;</span>
+        <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">port_file</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="n">rc</span><span class="o">.</span><span class="n">port_file</span> <span class="o">=</span> <span class="s">&#39;/etc/apache2/ports.conf&#39;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">rc</span><span class="o">.</span><span class="n">apache2_setup</span><span class="p">:</span>
             <span class="k">return</span>
-        <span class="n">conf</span> <span class="o">=</span> <span class="n">conf_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">rc</span><span class="p">)</span>
-        <span class="n">wsgi</span> <span class="o">=</span> <span class="n">wsgi_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">rc</span><span class="p">)</span>
+        <span class="n">conf</span> <span class="o">=</span> <span class="n">conf_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="n">server_name</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">server_name</span><span class="p">,</span> 
+                                    <span class="n">wsgi_file</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">wsgi_file</span><span class="p">,</span> <span class="n">rc_dir</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+                                    <span class="n">wsgi_dir</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">wsgi_file</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span> <span class="n">log_dir</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">log_dir</span> <span class="p">)</span>
+        <span class="n">wsgi</span> <span class="o">=</span> <span class="n">wsgi_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rc</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">rc</span><span class="p">)</span>
+        <span class="n">ports</span> <span class="o">=</span> <span class="n">port_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
         <span class="n">newoverwrite</span><span class="p">(</span><span class="n">conf</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">site_conf_file</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
-        <span class="n">newoverwrite</span><span class="p">(</span><span class="n">wsgi</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">wsgi_file</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span></div>
+        <span class="n">newoverwrite</span><span class="p">(</span><span class="n">wsgi</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">wsgi_file</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">port_file</span><span class="p">):</span>
+            <span class="n">port_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">port_file</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span>
+            <span class="n">port_lines</span> <span class="o">=</span> <span class="n">port_file</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+            <span class="n">port_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">port_lines</span><span class="p">:</span>
+                <span class="n">tokens</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;Listen&#39;</span> <span class="ow">and</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">port</span><span class="p">):</span>
+                        <span class="n">found</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+                <span class="n">port_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">port_file</span><span class="p">,</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+                <span class="n">port_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">Listen &#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">port</span><span class="p">)</span><span class="o">+</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+                <span class="n">port_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+              
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">newoverwrite</span><span class="p">(</span><span class="n">ports</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">port_file</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -188,7 +256,7 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
-    <li><a href="../../index.html">polyphemus 0.1-dev documentation</a> &raquo;</li>
+    <li><a href="../../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
 
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>

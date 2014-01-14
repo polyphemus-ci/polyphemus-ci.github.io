@@ -1,0 +1,315 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Run Control Parameters &mdash; polyphemus 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/numpy_friendly.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.js"></script>
+    <link rel="shortcut icon" href="_static/polyphemus.ico"/>
+    <link rel="top" title="polyphemus 0.1 documentation" href="index.html" />
+    <link rel="next" title="Previous Versions" href="previous/index.html" />
+    <link rel="prev" title="Polyphemus CLI" href="api/main.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="previous/index.html" title="Previous Versions"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="api/main.html" title="Polyphemus CLI"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="run-control-parameters">
+<h1>Run Control Parameters<a class="headerlink" href="#run-control-parameters" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="polyphemus-base">
+<h2>polyphemus.base<a class="headerlink" href="#polyphemus-base" title="Permalink to this headline">¶</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">appname:</th><td class="field-body">The name of the flask application., <em>default:</em> &#8216;polyphemus&#8217;.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">bash_completion:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">Flag for enabling / disabling BASH completion. This is only
+relevant when using argcomplete., <em>default:</em> True.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">debug:</th><td class="field-body">run in debugging mode, <em>default:</em> False.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">debug_filename:</th><td class="field-body">the path to the debug file, <em>default:</em> &#8216;debug.txt&#8217;.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">host:</th><td class="field-body">Which urls to host to, ie &#8216;0.0.0.0&#8217; for everyone or &#8216;localhost&#8217; for
+yourself, <em>default:</em> &#8216;0.0.0.0&#8217;.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">plugins:</th><td class="field-body">Plugins to include, <em>default:</em> (&#8216;polyphemus.base&#8217;,
+&#8216;polyphemus.githubhook&#8217;, &#8216;polyphemus.batlabrun&#8217;, &#8216;polyphemus.batlabstat&#8217;,
+&#8216;polyphemus.githubstat&#8217;, &#8216;polyphemus.dashboard&#8217;).</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">port:</th><td class="field-body">The port to run the application on., <em>default:</em> 80.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">rc:</th><td class="field-body">Path to run control file, <em>default:</em> &#8216;polyphemusrc.py&#8217;.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">server_url:</th><td class="field-body">The URL of the server without a trailing slash or port number, eg
+&#8216;<a class="reference external" href="http://pynesim.org">http://pynesim.org</a>&#8216;. If not provided, it will be guessed from your current
+public IP address., <em>default:</em> NotSpecified.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">ssh_key_file:</th><td class="field-body">The location of an SSH RSA key to use for authentication,
+defaults to &#8216;~/.ssh/id_rsa&#8217;. If this file does not exist a key will be
+generated at this location., <em>default:</em> &#8216;~/.ssh/id_rsa&#8217;.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">verbose:</th><td class="field-body">Print more output., <em>default:</em> False.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">version:</th><td class="field-body">Print version information., <em>default:</em> False.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="polyphemus-batlabbase">
+<h2>polyphemus.batlabbase<a class="headerlink" href="#polyphemus-batlabbase" title="Permalink to this headline">¶</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">batlab_user:</th><td class="field-body">The BaTLab user name to login with.  Must have rights on the
+submit node., <em>default:</em> NotSpecified.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="polyphemus-batlabrun">
+<h2>polyphemus.batlabrun<a class="headerlink" href="#polyphemus-batlabrun" title="Permalink to this headline">¶</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">batlab_fetch_file:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The fetch file that is used by BaTLab to grab the project
+source code.  This file will be overwritten by polyphemus. This should be a
+relative path from the base of the batlab_scripts_url dir., <em>default:</em>
+NotSpecified.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">batlab_jobs_cache:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">The cache file for currently running BaTLab jobs.,
+<em>default:</em> &#8216;jobs.cache&#8217;.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">batlab_kill_cmd:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The command that is used to kill existing jobs on BaTLab.,
+<em>default:</em> &#8216;nmi_rm&#8217;.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">batlab_run_spec:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">The top level <em>.run-spec file that is submitted to BaTLab.
+This should be a relative path from the base of the batlab_scripts_url dir.,
+*default:</em> NotSpecified.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">batlab_scripts_url:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">This is the URL where the BaTLab files may be found. If
+this ends in &#8216;.git&#8217; then it is interperted as a git repository and the whole
+repo is cloned.  If this ends in &#8216;.zip&#8217; then the URL is downloaded and
+unpacked., <em>default:</em> NotSpecified.</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">batlab_submit_cmd:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">The command that is used to submit jobs to BaTLab.,
+<em>default:</em> &#8216;nmi_submit&#8217;.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="polyphemus-batlabstat">
+<h2>polyphemus.batlabstat<a class="headerlink" href="#polyphemus-batlabstat" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="polyphemus-batlab">
+<h2>polyphemus.batlab<a class="headerlink" href="#polyphemus-batlab" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="polyphemus-githubbase">
+<h2>polyphemus.githubbase<a class="headerlink" href="#polyphemus-githubbase" title="Permalink to this headline">¶</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">github_credentials:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The github credentials file where token authentication is
+stored., <em>default:</em> &#8216;gh.cred&#8217;.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">github_events:</th><td class="field-body">The github events to trigger on., <em>default:</em> [&#8216;pull_request&#8217;].</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">github_owner:</th><td class="field-body">The repository owner on github, e.g. &#8216;scopatz&#8217;, <em>default:</em>
+NotSpecified.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">github_repo:</th><td class="field-body">The repository name on github, e.g. &#8216;pyne&#8217;, <em>default:</em>
+NotSpecified.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">github_user:</th><td class="field-body">The github user name to login with.  Must have rights to the
+repo., <em>default:</em> NotSpecified.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="polyphemus-githubhook">
+<h2>polyphemus.githubhook<a class="headerlink" href="#polyphemus-githubhook" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="polyphemus-githubstat">
+<h2>polyphemus.githubstat<a class="headerlink" href="#polyphemus-githubstat" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="polyphemus-github">
+<h2>polyphemus.github<a class="headerlink" href="#polyphemus-github" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="polyphemus-apache2">
+<h2>polyphemus.apache2<a class="headerlink" href="#polyphemus-apache2" title="Permalink to this headline">¶</a></h2>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">apache2_setup:</th><td class="field-body">Sets up polyphemus to run under Apache 2 with mod_wsgi.,
+<em>default:</em> False.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">server_name:</th><td class="field-body">The name of the website, e.g. &#8216;polyphemus.org&#8217;., <em>default:</em>
+NotSpecified.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">site_conf_file:</th><td class="field-body">The Apache 2 site configiration file name, defaults to
+&#8216;/etc/apache2/sites-available/{server_name}.conf&#8217;, <em>default:</em> NotSpecified.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">wsgi_file:</th><td class="field-body">The WSGI script file name, defaults to
+&#8216;/var/www/{appname}/{appname}.wsgi&#8217;, <em>default:</em> NotSpecified.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="index.html">
+          <img class="logo" src="_static/polyphemus.gif" alt="Logo"/>
+        </a></p>
+  <div class="sphinxlocaltoc">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Run Control Parameters</a><ul>
+<li><a class="reference internal" href="#polyphemus-base">polyphemus.base</a></li>
+<li><a class="reference internal" href="#polyphemus-batlabbase">polyphemus.batlabbase</a></li>
+<li><a class="reference internal" href="#polyphemus-batlabrun">polyphemus.batlabrun</a></li>
+<li><a class="reference internal" href="#polyphemus-batlabstat">polyphemus.batlabstat</a></li>
+<li><a class="reference internal" href="#polyphemus-batlab">polyphemus.batlab</a></li>
+<li><a class="reference internal" href="#polyphemus-githubbase">polyphemus.githubbase</a></li>
+<li><a class="reference internal" href="#polyphemus-githubhook">polyphemus.githubhook</a></li>
+<li><a class="reference internal" href="#polyphemus-githubstat">polyphemus.githubstat</a></li>
+<li><a class="reference internal" href="#polyphemus-github">polyphemus.github</a></li>
+<li><a class="reference internal" href="#polyphemus-apache2">polyphemus.apache2</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="api/main.html"
+                        title="previous chapter">Polyphemus CLI</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="previous/index.html"
+                        title="next chapter">Previous Versions</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/rcdocs.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="previous/index.html" title="Previous Versions"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="api/main.html" title="Polyphemus CLI"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Anthony Scopatz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

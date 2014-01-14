@@ -1,0 +1,410 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>polyphemus.batlabrun &mdash; polyphemus 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/numpy_friendly.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../_static/cloud.js"></script>
+    <link rel="shortcut icon" href="../../_static/polyphemus.ico"/>
+    <link rel="top" title="polyphemus 0.1 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for polyphemus.batlabrun</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;The plug in to run on batlab.</span>
+
+<span class="sd">This module is available as an polyphemus plugin by the name ``polyphemus.batlabrun``.</span>
+
+<span class="sd">BaTLaB Plugin API</span>
+<span class="sd">=================</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">import</span> <span class="nn">github3</span>
+<span class="kn">import</span> <span class="nn">paramiko</span>
+
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">RunControl</span><span class="p">,</span> <span class="n">NotSpecified</span><span class="p">,</span> <span class="n">PersistentCache</span>
+<span class="kn">from</span> <span class="nn">.plugins</span> <span class="kn">import</span> <span class="n">Plugin</span>
+<span class="kn">from</span> <span class="nn">.event</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">runfor</span>
+<span class="kn">from</span> <span class="nn">.batlabbase</span> <span class="kn">import</span> <span class="n">BATLAB_SUBMIT_HOSTNAME</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="nb">basestring</span> <span class="o">=</span> <span class="nb">str</span>
+
+<span class="n">git_fetch_template</span> <span class="o">=</span> \
+<span class="sd">&quot;&quot;&quot;method = git</span>
+<span class="sd">git_repo = {repo_url}</span>
+<span class="sd">git_path = {repo_dir};cd {repo_dir};git checkout {branch}</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="n">pre_curl_template</span> <span class="o">=</span> <span class="s">r&quot;&quot;&quot;# polyphemus pre_all callback</span>
+<span class="s">curl --form status=&#39;{{\&quot;status\&quot;:\&quot;pending\&quot;,\&quot;number\&quot;:{number},\&quot;description\&quot;:\&quot;build and test initialized\&quot;}}&#39; {server_url}:{port}/batlabstatus</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+<span class="n">post_curl_template</span> <span class="o">=</span> <span class="s">r&quot;&quot;&quot;# polyphemus post_all callbacks</span>
+<span class="s">if [ -z $_NMI_STEP_FAILED ]</span>
+<span class="s">then</span>
+<span class="s">    curl --form status=&#39;{{\&quot;status\&quot;:\&quot;success\&quot;,\&quot;number\&quot;:{number},\&quot;description\&quot;:\&quot;build and test completed successfully\&quot;}}&#39; {server_url}:{port}/batlabstatus</span>
+<span class="s">else</span>
+<span class="s">    curl --form status=&#39;{{\&quot;status\&quot;:\&quot;failure\&quot;,\&quot;number\&quot;:{number},\&quot;description\&quot;:\&quot;build and test failed\&quot;}}&#39; {server_url}:{port}/batlabstatus</span>
+<span class="s">fi</span>
+<span class="s">&quot;&quot;&quot;</span>
+
+<span class="n">unzip_cmds_template</span> <span class="o">=</span> \
+<span class="sd">&quot;&quot;&quot;curl -L -o batlab_scripts.zip {batlab_scripts_url}</span>
+<span class="sd">unzip -d {jobdir} batlab_scripts.zip</span>
+<span class="sd">rm batlab_scripts.zip</span>
+<span class="sd">ls {jobdir}&quot;&quot;&quot;</span>
+
+<span class="n">jobdir_scp_template</span> <span class="o">=</span> \
+<span class="sd">&quot;&quot;&quot;method = scp</span>
+<span class="sd">scp_file = {jobdir}/*</span>
+<span class="sd">recursive = true</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">_find_startswith</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Finds the index of a sequence that starts with s or returns -1.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">elem</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">i</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+<span class="k">def</span> <span class="nf">_ensure_task_script</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">run_spec_lines</span><span class="p">,</span> <span class="n">run_spec_path</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">,</span> <span class="n">client</span><span class="p">):</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">_find_startswith</span><span class="p">(</span><span class="n">run_spec_lines</span><span class="p">,</span> <span class="n">task</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">task_file</span> <span class="o">=</span> <span class="n">run_spec_lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">task_file</span> <span class="o">=</span> <span class="s">&#39;{0}.sh&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&quot;echo &#39;#!/bin/bash&#39; &gt; {0}/{1}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobdir</span><span class="p">,</span> <span class="n">task_file</span><span class="p">))</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&#39;chmod 755 {0}/{1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobdir</span><span class="p">,</span> <span class="n">task_file</span><span class="p">))</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&#39;echo &quot;{0} = {1}&quot; &gt;&gt; {2}/{3}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">task_file</span><span class="p">,</span> 
+                                                          <span class="n">jobdir</span><span class="p">,</span> <span class="n">run_spec_path</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">task_file</span>
+
+<span class="k">def</span> <span class="nf">_ensure_runspec_option</span><span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="n">run_spec_lines</span><span class="p">,</span> <span class="n">run_spec_path</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">_find_startswith</span><span class="p">(</span><span class="n">run_spec_lines</span><span class="p">,</span> <span class="n">option</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">old_val</span> <span class="o">=</span> <span class="n">run_spec_lines</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">old_val</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&quot;sed -i -e &#39;s/{0}/{1}={2}/g&#39; {3}/{4}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">run_spec_lines</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> 
+                                                          <span class="n">option</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">,</span> <span class="n">run_spec_path</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&#39;echo &quot;{0} = {1}&quot; &gt;&gt; {2}/{3}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">option</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> 
+                                                          <span class="n">jobdir</span><span class="p">,</span> <span class="n">run_spec_path</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="PolyphemusPlugin"><a class="viewcode-back" href="../../api/batlabrun.html#polyphemus.batlabrun.PolyphemusPlugin">[docs]</a><span class="k">class</span> <span class="nc">PolyphemusPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class provides functionality for running batlab.&quot;&quot;&quot;</span>
+
+    <span class="n">requires</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;polyphemus.batlabbase&#39;</span><span class="p">,)</span>
+
+    <span class="n">defaultrc</span> <span class="o">=</span> <span class="n">RunControl</span><span class="p">(</span>
+        <span class="n">batlab_jobs_cache</span><span class="o">=</span><span class="s">&#39;jobs.cache&#39;</span><span class="p">,</span> 
+        <span class="n">batlab_submit_cmd</span><span class="o">=</span><span class="s">&#39;nmi_submit&#39;</span><span class="p">,</span>
+        <span class="n">batlab_kill_cmd</span><span class="o">=</span><span class="s">&#39;nmi_rm&#39;</span><span class="p">,</span>
+        <span class="n">batlab_scripts_url</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+        <span class="n">batlab_fetch_file</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+        <span class="n">batlab_run_spec</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">rcdocs</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;batlab_jobs_cache&#39;</span><span class="p">:</span> <span class="s">&#39;The cache file for currently running BaTLab jobs.&#39;</span><span class="p">,</span>
+        <span class="s">&#39;batlab_submit_cmd&#39;</span><span class="p">:</span> <span class="s">&#39;The command that is used to submit jobs to BaTLab.&#39;</span><span class="p">,</span> 
+        <span class="s">&#39;batlab_kill_cmd&#39;</span><span class="p">:</span> <span class="s">&#39;The command that is used to kill existing jobs on BaTLab.&#39;</span><span class="p">,</span>
+        <span class="s">&#39;batlab_scripts_url&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;This is the URL where the BaTLab files may be found. &quot;</span>
+                               <span class="s">&quot;If this ends in &#39;.git&#39; then it is interperted as a &quot;</span>
+                               <span class="s">&quot;git repository and the whole repo is cloned.  If &quot;</span>
+                               <span class="s">&quot;this ends in &#39;.zip&#39; then the URL is downloaded and &quot;</span>
+                               <span class="s">&quot;unpacked.&quot;</span><span class="p">),</span>
+        <span class="s">&#39;batlab_fetch_file&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;The fetch file that is used by BaTLab to grab the &quot;</span>
+                              <span class="s">&quot;project source code.  This file will be overwritten &quot;</span>
+                              <span class="s">&quot;by polyphemus. This should be a relative path from &quot;</span>
+                              <span class="s">&quot;the base of the batlab_scripts_url dir.&quot;</span><span class="p">),</span>
+        <span class="s">&#39;batlab_run_spec&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;The top level *.run-spec file that is submitted to &quot;</span>
+                            <span class="s">&quot;BaTLab. This should be a relative path from &quot;</span>
+                            <span class="s">&quot;the base of the batlab_scripts_url dir.&quot;</span><span class="p">),</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">update_argparser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--batlab-jobs-cache&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;batlab_jobs_cache&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;batlab_jobs_cache&quot;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--batlab-submit-cmd&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;batlab_submit_cmd&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;batlab_submit_cmd&quot;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--batlab-kill-cmd&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;batlab_kill_cmd&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;batlab_kill_cmd&quot;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--batlab-scripts-url&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;batlab_scripts_url&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;batlab_scripts_url&quot;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--batlab-fetch-file&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;batlab_fetch_file&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;batlab_fetch_file&quot;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--batlab-run-spec&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;batlab_run_spec&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;batlab_run_spec&quot;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rc</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">batlab_scripts_url</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;batlab_scripts_url must be provided!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">batlab_scripts_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.git&#39;</span><span class="p">)</span> <span class="ow">or</span> 
+                <span class="n">rc</span><span class="o">.</span><span class="n">batlab_scripts_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.zip&#39;</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;batlab_scripts_url must end in &#39;.git&#39; or &#39;.zip&#39;, &quot;</span>
+                             <span class="s">&quot;found {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">batlab_scripts_url</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">batlab_fetch_file</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;batlab_fetch_file must be provided!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">batlab_run_spec</span> <span class="ow">is</span> <span class="n">NotSpecified</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;batlab_run_spec must be provided!&#39;</span><span class="p">)</span>
+    
+    <span class="nd">@runfor</span><span class="p">(</span><span class="s">&#39;batlab-run&#39;</span><span class="p">,</span> <span class="s">&#39;github-pr-new&#39;</span><span class="p">,</span> <span class="s">&#39;github-pr-sync&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rc</span><span class="p">):</span>
+        <span class="n">event_name</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">data</span>  <span class="c"># pull request object</span>
+        <span class="n">job</span> <span class="o">=</span> <span class="n">pr</span><span class="o">.</span><span class="n">repository</span> <span class="o">+</span> <span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">number</span><span class="p">,)</span>  <span class="c"># job key (owner, repo, number) </span>
+        <span class="n">jobdir</span> <span class="o">=</span> <span class="s">&quot;${HOME}/&quot;</span> <span class="o">+</span> <span class="s">&quot;--&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">repository</span> <span class="o">+</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">number</span><span class="p">),))</span>
+        <span class="n">jobs</span> <span class="o">=</span> <span class="n">PersistentCache</span><span class="p">(</span><span class="n">cachefile</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">batlab_jobs_cache</span><span class="p">)</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;batlab-status&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;status&#39;</span><span class="p">:</span> <span class="s">&#39;error&#39;</span><span class="p">,</span> 
+                                 <span class="s">&#39;number&#39;</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">})</span>
+
+        <span class="c"># connect to batlab</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">RSAKey</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">ssh_key_file</span><span class="p">)</span>
+        <span class="n">client</span> <span class="o">=</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHClient</span><span class="p">()</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">load_system_host_keys</span><span class="p">()</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">set_missing_host_key_policy</span><span class="p">(</span><span class="n">paramiko</span><span class="o">.</span><span class="n">AutoAddPolicy</span><span class="p">())</span>
+        <span class="c">#client.get_host_keys().add(BATLAB_SUBMIT_HOSTNAME, &#39;ssh-rsa&#39;, key)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">client</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">BATLAB_SUBMIT_HOSTNAME</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">batlab_user</span><span class="p">,</span>
+                           <span class="n">key_filename</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">ssh_key_file</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">paramiko</span><span class="o">.</span><span class="n">BadHostKeyException</span><span class="p">,</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">AuthenticationException</span><span class="p">,</span> 
+                <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHException</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&#39;Error connecting to BaTLab.&#39;</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">msg</span>
+            <span class="k">return</span>
+
+        <span class="c"># if sync event, kill an existing job.</span>
+        <span class="k">if</span> <span class="n">event_name</span> <span class="o">==</span> <span class="s">&#39;github-pr-sync&#39;</span> <span class="ow">and</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">batlab_kill_cmd</span> <span class="o">+</span> <span class="s">&#39; &#39;</span> <span class="o">+</span> <span class="n">jobs</span><span class="p">[</span><span class="n">job</span><span class="p">][</span><span class="s">&#39;gid&#39;</span><span class="p">])</span>
+            <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHException</span><span class="p">:</span>
+                <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Error killing existing BaTLab job.&quot;</span>
+                <span class="k">return</span>
+            <span class="k">del</span> <span class="n">jobs</span><span class="p">[</span><span class="n">job</span><span class="p">]</span>
+
+        <span class="c"># make sure we have a clean jobdir</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&#39;rm -rf &#39;</span> <span class="o">+</span> <span class="n">jobdir</span><span class="p">)</span>
+
+        <span class="c"># put the scripts on batlab in a &#39;~/owner--reposiotry--number&#39; dir</span>
+        <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">batlab_scripts_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.git&#39;</span><span class="p">):</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="s">&#39;git clone {0} {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">batlab_scripts_url</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHException</span><span class="p">:</span>
+                <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Error cloning BaTLab scripts.&quot;</span>
+                <span class="k">return</span>            
+        <span class="k">elif</span> <span class="n">rc</span><span class="o">.</span><span class="n">batlab_scripts_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;.zip&#39;</span><span class="p">):</span>
+            <span class="n">cmds</span> <span class="o">=</span> <span class="n">unzip_cmds_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobdir</span><span class="o">=</span><span class="n">jobdir</span><span class="p">,</span> 
+                    <span class="n">batlab_scripts_url</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">batlab_scripts_url</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">rtns</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">,</span> <span class="n">cmds</span><span class="p">))</span>
+            <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHException</span><span class="p">:</span>
+                <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Error unzipping BaTLab scripts.&quot;</span>
+                <span class="k">return</span>            
+            <span class="n">ls</span> <span class="o">=</span> <span class="n">rtns</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ls</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&#39;mv {0}/{1}/* {0}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobdir</span><span class="p">,</span> <span class="n">ls</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHException</span><span class="p">:</span>
+                    <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Error moving BaTLab scripts.&quot;</span>
+                    <span class="k">return</span>            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;rc.batlab_scripts_url not understood.&quot;</span><span class="p">)</span>
+
+        <span class="c"># Overwrite fetch file</span>
+        <span class="n">head_repo</span> <span class="o">=</span> <span class="n">github3</span><span class="o">.</span><span class="n">repository</span><span class="p">(</span><span class="o">*</span><span class="n">pr</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">repo</span><span class="p">)</span>
+        <span class="n">fetch</span> <span class="o">=</span> <span class="n">git_fetch_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="o">=</span><span class="n">head_repo</span><span class="o">.</span><span class="n">clone_url</span><span class="p">,</span>
+                                          <span class="n">repo_dir</span><span class="o">=</span><span class="n">job</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">branch</span><span class="o">=</span><span class="n">pr</span><span class="o">.</span><span class="n">head</span><span class="o">.</span><span class="n">ref</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s">&#39;echo &quot;{0}&quot; &gt; {1}/{2}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fetch</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">batlab_fetch_file</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHException</span><span class="p">:</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Error overwritting fetch file.&quot;</span>
+            <span class="k">return</span>
+        
+        <span class="c"># append callbacks to run spec</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&#39;cat {0}/{1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobdir</span><span class="p">,</span> 
+                                                               <span class="n">rc</span><span class="o">.</span><span class="n">batlab_run_spec</span><span class="p">))</span>
+            <span class="n">run_spec_lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">l</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">readlines</span><span class="p">()]</span>
+            <span class="n">pre_file</span> <span class="o">=</span> <span class="n">_ensure_task_script</span><span class="p">(</span><span class="s">&#39;pre_all&#39;</span><span class="p">,</span> <span class="n">run_spec_lines</span><span class="p">,</span> 
+                                           <span class="n">rc</span><span class="o">.</span><span class="n">batlab_run_spec</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+            <span class="n">pre_curl</span> <span class="o">=</span> <span class="n">pre_curl_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">number</span><span class="o">=</span><span class="n">pr</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> 
+                                                <span class="n">server_url</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">server_url</span><span class="p">)</span>
+            <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&#39;echo &quot;{0}&quot; &gt;&gt; {1}/{2}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pre_curl</span><span class="p">,</span> 
+                                                               <span class="n">jobdir</span><span class="p">,</span> <span class="n">pre_file</span><span class="p">))</span>
+            <span class="n">post_file</span> <span class="o">=</span> <span class="n">_ensure_task_script</span><span class="p">(</span><span class="s">&#39;post_all&#39;</span><span class="p">,</span> <span class="n">run_spec_lines</span><span class="p">,</span> 
+                                            <span class="n">rc</span><span class="o">.</span><span class="n">batlab_run_spec</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">,</span> <span class="n">client</span><span class="p">)</span>
+            <span class="n">_ensure_runspec_option</span><span class="p">(</span><span class="s">&#39;always_run_post_all&#39;</span><span class="p">,</span> <span class="n">run_spec_lines</span><span class="p">,</span> 
+                                   <span class="n">rc</span><span class="o">.</span><span class="n">batlab_run_spec</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="s">&#39;true&#39;</span><span class="p">)</span>
+            <span class="n">post_curl</span> <span class="o">=</span> <span class="n">post_curl_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">number</span><span class="o">=</span><span class="n">pr</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> 
+                                                  <span class="n">server_url</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">server_url</span><span class="p">)</span>
+            <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="s">&#39;echo &quot;{0}&quot; &gt;&gt; {1}/{2}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">post_curl</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">,</span> 
+                                                               <span class="n">post_file</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHException</span><span class="p">:</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Error appending BaTLab callbacks.&quot;</span>
+            <span class="k">return</span>            
+
+        <span class="c"># create scp for jobdir</span>
+        <span class="n">jobdir_scp</span> <span class="o">=</span> <span class="n">jobdir_scp_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobdir</span><span class="o">=</span><span class="n">jobdir</span><span class="p">)</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s">&#39;echo &quot;{0}&quot; &gt;&gt; {1}/jobdir.scp&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobdir_scp</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHException</span><span class="p">:</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Error creating jobdir.scp file.&quot;</span>
+            <span class="k">return</span>            
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">run_spec_lines</span><span class="p">[</span><span class="n">_find_startswith</span><span class="p">(</span><span class="n">run_spec_lines</span><span class="p">,</span> <span class="s">&#39;inputs&#39;</span><span class="p">)]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;=&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="s">&quot;sed -i &#39;s:{0}:{0},jobdir.scp:&#39; {1}/{2}&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="s">&quot;sed -i &#39;s:{0}:jobdir.scp:&#39; {1}/{2}&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="n">cmd</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">jobdir</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">batlab_run_spec</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHException</span><span class="p">:</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Error adding jobdir.scp to inputs.&quot;</span>
+            <span class="k">return</span>            
+
+        <span class="c"># submit the job</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="s">&#39;cd {0}; {1} {2}&#39;</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">cmd</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobdir</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">batlab_submit_cmd</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">batlab_run_spec</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">submitout</span><span class="p">,</span> <span class="n">submiterr</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">exec_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">paramiko</span><span class="o">.</span><span class="n">SSHException</span><span class="p">:</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;Error submitting BaTLab job.&quot;</span>
+            <span class="k">return</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">submiterr</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">err</span><span class="p">):</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">err</span>
+            <span class="n">warn</span><span class="p">(</span><span class="s">&quot;BaTLab job unsuccessfully submitted:</span><span class="se">\n</span><span class="s">&quot;</span> <span class="o">+</span> <span class="n">err</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c"># clean up</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="n">submitout</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+        <span class="c">#import pprint</span>
+        <span class="c">#pprint.pprint(lines)</span>
+        <span class="c">#pprint.pprint(submiterr.read())</span>
+        <span class="n">report_url</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">gid</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">jobs</span><span class="p">[</span><span class="n">job</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;gid&#39;</span><span class="p">:</span> <span class="n">gid</span><span class="p">,</span> <span class="s">&#39;report_url&#39;</span><span class="p">:</span> <span class="n">report_url</span><span class="p">,</span> <span class="s">&#39;dir&#39;</span><span class="p">:</span> <span class="n">jobdir</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;BaTLab reporting link: &quot;</span> <span class="o">+</span> <span class="n">report_url</span><span class="p">)</span>
+        <span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s">&#39;pending&#39;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&quot;BaTLab job submitted.&quot;</span><span class="p">,</span>
+                          <span class="n">target_url</span><span class="o">=</span><span class="n">report_url</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="../../index.html">
+          <img class="logo" src="../../_static/polyphemus.gif" alt="Logo"/>
+        </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Anthony Scopatz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

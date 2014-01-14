@@ -1,0 +1,178 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>GitHub Status Plugin &mdash; polyphemus 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/numpy_friendly.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../_static/cloud.js"></script>
+    <link rel="shortcut icon" href="../_static/polyphemus.ico"/>
+    <link rel="top" title="polyphemus 0.1 documentation" href="../index.html" />
+    <link rel="up" title="Polyphemus API" href="index.html" />
+    <link rel="next" title="BaTLab Plugin" href="batlab.html" />
+    <link rel="prev" title="GitHub Hook Plugin" href="githubhook.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="batlab.html" title="BaTLab Plugin"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="githubhook.html" title="GitHub Hook Plugin"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+
+          <li><a href="index.html" accesskey="U">Polyphemus API</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-polyphemus.githubstat">
+<span id="github-status-plugin"></span><span id="polyphemus-githubstat"></span><h1>GitHub Status Plugin<a class="headerlink" href="#module-polyphemus.githubstat" title="Permalink to this headline">¶</a></h1>
+<p>The plugin to recieve posts from batlab and update the status of the pull request.</p>
+<p>This module is available as an polyphemus plugin by the name <tt class="docutils literal"><span class="pre">polyphemus.githubstat</span></tt>.</p>
+<div class="section" id="github-status-api">
+<h2>GitHub Status API<a class="headerlink" href="#github-status-api" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="polyphemus.githubstat.PolyphemusPlugin">
+<em class="property">class </em><tt class="descclassname">polyphemus.githubstat.</tt><tt class="descname">PolyphemusPlugin</tt><a class="reference internal" href="../_modules/polyphemus/githubstat.html#PolyphemusPlugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polyphemus.githubstat.PolyphemusPlugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class provides functionality for updating pull request statuses on 
+github.</p>
+<p>The __init__() method may take no arguments or keyword arguments.</p>
+<dl class="method">
+<dt id="polyphemus.githubstat.PolyphemusPlugin.execute">
+<tt class="descname">execute</tt><big>(</big><em>rc</em>, <em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/polyphemus/githubstat.html#PolyphemusPlugin.execute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polyphemus.githubstat.PolyphemusPlugin.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>The githubstat plugin is only executed for &#8216;batlab-status&#8217; events and 
+requires that the event data be a dictionary with &#8216;status&#8217; and &#8216;number&#8217; as
+keys.  It optionally may also include &#8216;target_url&#8217; and &#8216;description&#8217; keys.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="../index.html">
+          <img class="logo" src="../_static/polyphemus.gif" alt="Logo"/>
+        </a></p>
+  <div class="sphinxlocaltoc">
+  <h3><a href="../index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">GitHub Status Plugin</a><ul>
+<li><a class="reference internal" href="#github-status-api">GitHub Status API</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="githubhook.html"
+                        title="previous chapter">GitHub Hook Plugin</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="batlab.html"
+                        title="next chapter">BaTLab Plugin</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/api/githubstat.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="batlab.html" title="BaTLab Plugin"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="githubhook.html" title="GitHub Hook Plugin"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+
+          <li><a href="index.html" >Polyphemus API</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Anthony Scopatz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

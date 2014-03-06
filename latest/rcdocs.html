@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Run Control Parameters &mdash; polyphemus 0.1 documentation</title>
+    <title>Run Control Parameters &mdash; polyphemus 0.2-dev documentation</title>
     
     <link rel="stylesheet" href="_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.1',
+        VERSION:     '0.2-dev',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="shortcut icon" href="_static/polyphemus.ico"/>
-    <link rel="top" title="polyphemus 0.1 documentation" href="index.html" />
+    <link rel="top" title="polyphemus 0.2-dev documentation" href="index.html" />
     <link rel="next" title="Previous Versions" href="previous/index.html" />
     <link rel="prev" title="Polyphemus CLI" href="api/main.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -56,7 +56,7 @@
         <li class="right" >
           <a href="api/main.html" title="Polyphemus CLI"
              accesskey="P">previous</a> &nbsp; &nbsp;</li>
-    <li><a href="index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+    <li><a href="index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
  
       </ul>
     </div>
@@ -86,8 +86,13 @@ relevant when using argcomplete., <em>default:</em> True.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">debug_filename:</th><td class="field-body">the path to the debug file, <em>default:</em> &#8216;debug.txt&#8217;.</td>
 </tr>
-<tr class="field-odd field"><th class="field-name">host:</th><td class="field-body">Which urls to host to, ie &#8216;0.0.0.0&#8217; for everyone or &#8216;localhost&#8217; for
+<tr class="field-odd field"><th class="field-name">flask_kwargs:</th><td class="field-body">keyword argumnets submitted to Flask() constructor., <em>default:</em>
+{&#8216;static_url_path&#8217;: &#8216;/static&#8217;}.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">host:</th><td class="field-body">Which urls to host to, ie &#8216;0.0.0.0&#8217; for everyone or &#8216;localhost&#8217; for
 yourself, <em>default:</em> &#8216;0.0.0.0&#8217;.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">only_setup:</th><td class="field-body">Only runs the setup phase of all plugins, <em>default:</em> False.</td>
 </tr>
 <tr class="field-even field"><th class="field-name">plugins:</th><td class="field-body">Plugins to include, <em>default:</em> (&#8216;polyphemus.base&#8217;,
 &#8216;polyphemus.githubhook&#8217;, &#8216;polyphemus.batlabrun&#8217;, &#8216;polyphemus.batlabstat&#8217;,
@@ -300,7 +305,7 @@ NotSpecified.</td>
         <li class="right" >
           <a href="api/main.html" title="Polyphemus CLI"
              >previous</a> &nbsp; &nbsp;</li>
-    <li><a href="index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+    <li><a href="index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
  
       </ul>
     </div>

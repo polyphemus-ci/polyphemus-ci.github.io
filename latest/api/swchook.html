@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>BaTLab Base Plugin &mdash; polyphemus 0.2-dev documentation</title>
+    <title>Software Carpentry Hook Plugin &mdash; polyphemus 0.2-dev documentation</title>
     
     <link rel="stylesheet" href="../_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -32,8 +32,8 @@
     <link rel="shortcut icon" href="../_static/polyphemus.ico"/>
     <link rel="top" title="polyphemus 0.2-dev documentation" href="../index.html" />
     <link rel="up" title="Polyphemus API" href="index.html" />
-    <link rel="next" title="BaTLab Execution Plugin" href="batlabrun.html" />
-    <link rel="prev" title="BaTLab Plugin" href="batlab.html" /> 
+    <link rel="next" title="Software Carpentry Page Plugin" href="swcpage.html" />
+    <link rel="prev" title="Software Carpentry Base Plugin" href="swcbase.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
   <body>
@@ -52,10 +52,10 @@
           <a href="../np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
         <li class="right" >
-          <a href="batlabrun.html" title="BaTLab Execution Plugin"
+          <a href="swcpage.html" title="Software Carpentry Page Plugin"
              accesskey="N">next</a> &nbsp; &nbsp;</li>
         <li class="right" >
-          <a href="batlab.html" title="BaTLab Plugin"
+          <a href="swcbase.html" title="Software Carpentry Base Plugin"
              accesskey="P">previous</a> &nbsp; &nbsp;</li>
     <li><a href="../index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
 
@@ -70,17 +70,22 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="module-polyphemus.batlabbase">
-<span id="batlab-base-plugin"></span><span id="polyphemus-batlabbase"></span><h1>BaTLab Base Plugin<a class="headerlink" href="#module-polyphemus.batlabbase" title="Permalink to this headline">¶</a></h1>
-<p>The basic functionality for BaTLab.</p>
-<p>This module is available as an polyphemus plugin by the name <cite>polyphemus.batlabbase</cite>.</p>
-<div class="section" id="basic-batlab-api">
-<h2>Basic BaTLaB API<a class="headerlink" href="#basic-batlab-api" title="Permalink to this headline">¶</a></h2>
+  <div class="section" id="module-polyphemus.swchook">
+<span id="software-carpentry-hook-plugin"></span><span id="polyphemus-swchook"></span><h1>Software Carpentry Hook Plugin<a class="headerlink" href="#module-polyphemus.swchook" title="Permalink to this headline">¶</a></h1>
+<p>The plug in to check SWC website changes.</p>
+<p>This module is available as an polyphemus plugin by the name <tt class="docutils literal"><span class="pre">polyphemus.swchook</span></tt>.</p>
+<div class="section" id="swc-hook-api">
+<h2>SWC Hook API<a class="headerlink" href="#swc-hook-api" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="polyphemus.batlabbase.PolyphemusPlugin">
-<em class="property">class </em><tt class="descclassname">polyphemus.batlabbase.</tt><tt class="descname">PolyphemusPlugin</tt><a class="reference internal" href="../_modules/polyphemus/batlabbase.html#PolyphemusPlugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polyphemus.batlabbase.PolyphemusPlugin" title="Permalink to this definition">¶</a></dt>
-<dd><p>This class provides basic BaTLab functionality.</p>
-<p>The __init__() method may take no arguments or keyword arguments.</p>
+<dt id="polyphemus.swchook.PolyphemusPlugin">
+<em class="property">class </em><tt class="descclassname">polyphemus.swchook.</tt><tt class="descname">PolyphemusPlugin</tt><a class="reference internal" href="../_modules/polyphemus/swchook.html#PolyphemusPlugin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polyphemus.swchook.PolyphemusPlugin" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class provides functionality for comparing SWC website PRs.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="polyphemus.swchook.add_stylesheet">
+<tt class="descclassname">polyphemus.swchook.</tt><tt class="descname">add_stylesheet</tt><big>(</big><em>elem</em>, <em>ss=u'\nins { background-color: #aaffaa; text-decoration: none }\ndel { background-color: #ff8888; text-decoration: line-through }\n'</em><big>)</big><a class="reference internal" href="../_modules/polyphemus/swchook.html#add_stylesheet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#polyphemus.swchook.add_stylesheet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a stylesheet to the end of an element.</p>
 </dd></dl>
 
 </div>
@@ -98,22 +103,22 @@
   <div class="sphinxlocaltoc">
   <h3><a href="../index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">BaTLab Base Plugin</a><ul>
-<li><a class="reference internal" href="#basic-batlab-api">Basic BaTLaB API</a></li>
+<li><a class="reference internal" href="#">Software Carpentry Hook Plugin</a><ul>
+<li><a class="reference internal" href="#swc-hook-api">SWC Hook API</a></li>
 </ul>
 </li>
 </ul>
 
   </div>
   <h4>Previous topic</h4>
-  <p class="topless"><a href="batlab.html"
-                        title="previous chapter">BaTLab Plugin</a></p>
+  <p class="topless"><a href="swcbase.html"
+                        title="previous chapter">Software Carpentry Base Plugin</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="batlabrun.html"
-                        title="next chapter">BaTLab Execution Plugin</a></p>
+  <p class="topless"><a href="swcpage.html"
+                        title="next chapter">Software Carpentry Page Plugin</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
-    <li><a href="../_sources/api/batlabbase.txt"
+    <li><a href="../_sources/api/swchook.txt"
            rel="nofollow">Show Source</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -148,10 +153,10 @@
           <a href="../np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
         <li class="right" >
-          <a href="batlabrun.html" title="BaTLab Execution Plugin"
+          <a href="swcpage.html" title="Software Carpentry Page Plugin"
              >next</a> &nbsp; &nbsp;</li>
         <li class="right" >
-          <a href="batlab.html" title="BaTLab Plugin"
+          <a href="swcbase.html" title="Software Carpentry Base Plugin"
              >previous</a> &nbsp; &nbsp;</li>
     <li><a href="../index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
 

@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>polyphemus.plugins &mdash; polyphemus 0.1 documentation</title>
+    <title>polyphemus.plugins &mdash; polyphemus 0.2-dev documentation</title>
     
     <link rel="stylesheet" href="../../_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.1',
+        VERSION:     '0.2-dev',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
     <script type="text/javascript" src="../../_static/cloud.js"></script>
     <link rel="shortcut icon" href="../../_static/polyphemus.ico"/>
-    <link rel="top" title="polyphemus 0.1 documentation" href="../../index.html" />
+    <link rel="top" title="polyphemus 0.2-dev documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
@@ -49,7 +49,7 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
-    <li><a href="../../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+    <li><a href="../../index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
 
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -465,6 +465,8 @@
                 <span class="n">plugin</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">rc</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rc</span><span class="o">.</span><span class="n">only_setup</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Plugins.execute"><a class="viewcode-back" href="../../api/plugins.html#polyphemus.plugins.Plugins.execute">[docs]</a>    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Preforms all plugin executions.&quot;&quot;&quot;</span>
@@ -477,7 +479,7 @@
 </div>
 <div class="viewcode-block" id="Plugins.build_app"><a class="viewcode-back" href="../../api/plugins.html#polyphemus.plugins.Plugins.build_app">[docs]</a>    <span class="k">def</span> <span class="nf">build_app</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Creates a default flask application.&quot;&quot;&quot;</span>
-        <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">appname</span><span class="p">)</span>
+        <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">appname</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">flask_kwargs</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">plugins</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">plugin</span><span class="o">.</span><span class="n">route</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
                 <span class="k">continue</span>
@@ -523,9 +525,12 @@
                     <span class="n">msg</span> <span class="o">+=</span> <span class="n">plugin_msg</span>
             <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">debug_filename</span><span class="p">),</span> <span class="s">&#39;a+&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span>
+            <span class="k">if</span> <span class="n">err</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
 </div></div>
 <div class="viewcode-block" id="summarize_rcdocs"><a class="viewcode-back" href="../../api/plugins.html#polyphemus.plugins.summarize_rcdocs">[docs]</a><span class="k">def</span> <span class="nf">summarize_rcdocs</span><span class="p">(</span><span class="n">modnames</span><span class="p">,</span> <span class="n">headersep</span><span class="o">=</span><span class="s">&quot;=&quot;</span><span class="p">,</span> <span class="n">maxdflt</span><span class="o">=</span><span class="mi">2000</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;For a list of plugin module names, return a rST string that </span>
@@ -570,8 +575,8 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">plugin</span><span class="o">.</span><span class="n">response</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">response</span><span class="p">():</span>
-        <span class="n">resp</span><span class="p">,</span> <span class="n">event</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">response</span><span class="p">(</span><span class="n">plugins</span><span class="o">.</span><span class="n">rc</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">resp</span><span class="p">,</span> <span class="n">event</span> <span class="o">=</span> <span class="n">plugin</span><span class="o">.</span><span class="n">response</span><span class="p">(</span><span class="n">plugins</span><span class="o">.</span><span class="n">rc</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">event</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">plugins</span><span class="o">.</span><span class="n">rc</span><span class="o">.</span><span class="n">event</span> <span class="o">=</span> <span class="n">event</span>
             <span class="n">plugins</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
@@ -618,7 +623,7 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
-    <li><a href="../../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+    <li><a href="../../index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
 
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>

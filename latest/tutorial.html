@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Tutorial &mdash; polyphemus 0.1 documentation</title>
+    <title>Tutorial &mdash; polyphemus 0.2-dev documentation</title>
     
     <link rel="stylesheet" href="_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.1',
+        VERSION:     '0.2-dev',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="_static/jquery.cookie.js"></script>
     <script type="text/javascript" src="_static/cloud.js"></script>
     <link rel="shortcut icon" href="_static/polyphemus.ico"/>
-    <link rel="top" title="polyphemus 0.1 documentation" href="index.html" />
+    <link rel="top" title="polyphemus 0.2-dev documentation" href="index.html" />
     <link rel="next" title="Polyphemus Continuous Integration" href="batlab.html" />
     <link rel="prev" title="Polyphemus-CI" href="index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -56,7 +56,7 @@
         <li class="right" >
           <a href="index.html" title="Polyphemus-CI"
              accesskey="P">previous</a> &nbsp; &nbsp;</li>
-    <li><a href="index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+    <li><a href="index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
  
       </ul>
     </div>
@@ -133,8 +133,8 @@ git clone https://github.com/cyclus/polyphemusrc
 
 <span class="c"># Setup polyphemus for a given run control file,</span>
 <span class="c"># kill these commands with ^C after they start</span>
-polyphemus --rc cyclusrc.py
-polyphemus --rc cyclusrc.py --plugins polyphemus.apache2 --apache2-setup
+polyphemus --only-setup --rc cyclusrc.py
+polyphemus --only-setup --plugins polyphemus.apache2 --apache2-setup --rc cyclusrc.py
 a2ensite cyclus-ci.fuelcycle.org
 
 <span class="c"># Verify permissions for apache</span>
@@ -144,6 +144,24 @@ chmod +r /var/www/.ssh/id_rsa
 
 <span class="c"># Start apache!</span>
 service apache2 start
+</pre></div>
+</div>
+</div>
+<div class="section" id="server-restart">
+<h2>Server Restart<a class="headerlink" href="#server-restart" title="Permalink to this headline">¶</a></h2>
+<p>Say you have just pulled in new commits from the repo.  The following
+is how you restart the server.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span class="c"># Pull &amp; Install Polyphemus Updates</span>
+<span class="nb">cd </span>polyphemus
+git pull
+python setup.py install
+
+<span class="c"># Restart apache</span>
+service apache2 restart
+
+<span class="c"># Restart development server</span>
+<span class="c"># kill running server though ^C, ^D, or kill</span>
+polyphemus --debug --rc /path/to/rc/file
 </pre></div>
 </div>
 </div>
@@ -164,6 +182,7 @@ service apache2 start
 <li><a class="reference internal" href="#">Tutorial</a><ul>
 <li><a class="reference internal" href="#putting-it-all-together">Putting It All Together</a></li>
 <li><a class="reference internal" href="#rackspace-install">Rackspace Install</a></li>
+<li><a class="reference internal" href="#server-restart">Server Restart</a></li>
 </ul>
 </li>
 </ul>
@@ -217,7 +236,7 @@ service apache2 start
         <li class="right" >
           <a href="index.html" title="Polyphemus-CI"
              >previous</a> &nbsp; &nbsp;</li>
-    <li><a href="index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+    <li><a href="index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
  
       </ul>
     </div>

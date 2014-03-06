@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>polyphemus.batlabstat &mdash; polyphemus 0.2-dev documentation</title>
+    <title>polyphemus.swcpages &mdash; polyphemus 0.2-dev documentation</title>
     
     <link rel="stylesheet" href="../../_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -62,13 +62,15 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <h1>Source code for polyphemus.batlabstat</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;The plugin to recieve status updates from batlab and re-dispatch them.</span>
+  <h1>Source code for polyphemus.swcpages</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;This provides simple file listing for pages which are different in the </span>
+<span class="sd">original and pull request.  The file listings are links which take the user</span>
+<span class="sd">to the 3-way diff page as rendered by the `polyphemus.swcpage` plugin.</span>
 
-<span class="sd">This module is available as an polyphemus plugin by the name `polyphemus.batlabstat`.</span>
+<span class="sd">This module is available as an polyphemus plugin by the name `polyphemus.swcpages`.</span>
 
-<span class="sd">BaTLab Status API</span>
-<span class="sd">=================</span>
+<span class="sd">Software Carpentry File Listing API</span>
+<span class="sd">===================================</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -85,38 +87,40 @@
 <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">json</span>
 
-<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">request</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">request</span><span class="p">,</span> <span class="n">render_template</span>
 
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">RunControl</span><span class="p">,</span> <span class="n">NotSpecified</span><span class="p">,</span> <span class="n">PersistentCache</span>
 <span class="kn">from</span> <span class="nn">.plugins</span> <span class="kn">import</span> <span class="n">Plugin</span>
 <span class="kn">from</span> <span class="nn">.event</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">runfor</span>
+<span class="kn">from</span> <span class="nn">.swcbase</span> <span class="kn">import</span> <span class="n">HTML_EXTS</span><span class="p">,</span> <span class="n">KNOWN_EXTS</span>
 
-<div class="viewcode-block" id="PolyphemusPlugin"><a class="viewcode-back" href="../../api/batlabstat.html#polyphemus.batlabstat.PolyphemusPlugin">[docs]</a><span class="k">class</span> <span class="nc">PolyphemusPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This class routes batlab status updates.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PolyphemusPlugin"><a class="viewcode-back" href="../../api/swcpages.html#polyphemus.swcpages.PolyphemusPlugin">[docs]</a><span class="k">class</span> <span class="nc">PolyphemusPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class routes the swcpage dashboard.&quot;&quot;&quot;</span>
 
-    <span class="n">requires</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;polyphemus.batlabbase&#39;</span><span class="p">,)</span>
+    <span class="n">requires</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;polyphemus.swcbase&#39;</span><span class="p">,)</span>
 
-    <span class="n">route</span> <span class="o">=</span> <span class="s">&#39;/batlabstatus&#39;</span>
+    <span class="n">route</span> <span class="o">=</span> <span class="s">&#39;/&lt;ghowner&gt;/&lt;ghrepo&gt;/&lt;int:pr&gt;&#39;</span>
 
-    <span class="n">request_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">,</span> <span class="s">&#39;POST&#39;</span><span class="p">]</span>
+    <span class="n">request_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">]</span>
 
-    <span class="n">_rm_job_stats</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s">&#39;success&#39;</span><span class="p">,</span> <span class="s">&#39;failure&#39;</span><span class="p">,</span> <span class="s">&#39;error&#39;</span><span class="p">])</span>
-
-    <span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rc</span><span class="p">):</span>
-        <span class="k">if</span> <span class="s">&#39;status&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="bp">None</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">form</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="s">&#39;status&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="bp">None</span>
-        <span class="n">jobs</span> <span class="o">=</span> <span class="n">PersistentCache</span><span class="p">(</span><span class="n">cachefile</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">batlab_jobs_cache</span><span class="p">)</span>
-        <span class="n">job</span> <span class="o">=</span> <span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">github_owner</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">github_repo</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;number&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="n">job</span> <span class="ow">in</span> <span class="n">jobs</span><span class="p">:</span>
-            <span class="k">if</span> <span class="s">&#39;target_url&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;target_url&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;http&#39;</span><span class="p">):</span>
-                <span class="n">data</span><span class="p">[</span><span class="s">&#39;target_url&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">jobs</span><span class="p">[</span><span class="n">job</span><span class="p">][</span><span class="s">&#39;report_url&#39;</span><span class="p">]</span>
-            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rm_job_stats</span><span class="p">:</span>
-                <span class="k">del</span> <span class="n">jobs</span><span class="p">[</span><span class="n">job</span><span class="p">]</span>
-        <span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;batlab-status&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">method</span> <span class="o">+</span> <span class="s">&quot;: batlab</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">event</span></div>
+    <span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rc</span><span class="p">,</span> <span class="n">ghowner</span><span class="p">,</span> <span class="n">ghrepo</span><span class="p">,</span> <span class="n">pr</span><span class="p">):</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="n">orp</span> <span class="o">=</span> <span class="p">(</span><span class="n">ghowner</span><span class="p">,</span> <span class="n">ghrepo</span><span class="p">,</span> <span class="n">pr</span><span class="p">)</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="n">PersistentCache</span><span class="p">(</span><span class="n">cachefile</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">swc_cache</span><span class="p">)</span>
+        <span class="n">cached_pages</span> <span class="o">=</span> <span class="n">cache</span><span class="p">[</span><span class="n">ghowner</span><span class="p">,</span> <span class="n">ghrepo</span><span class="p">,</span> <span class="n">pr</span><span class="p">][</span><span class="s">&#39;files&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">orp</span> <span class="ow">in</span> <span class="n">cache</span> <span class="k">else</span> <span class="p">[]</span>
+        <span class="n">pages</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">page</span> <span class="ow">in</span> <span class="n">cached_pages</span><span class="p">:</span>
+            <span class="n">proot</span><span class="p">,</span> <span class="n">pext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">pext</span> <span class="ow">in</span> <span class="n">HTML_EXTS</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">page</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="p">(</span><span class="n">page</span><span class="p">,</span> <span class="n">proot</span> <span class="o">+</span> <span class="s">&#39;.html&#39;</span><span class="p">)</span>
+            <span class="n">pages</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+        <span class="n">pages</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&quot;swcpages.html&quot;</span><span class="p">,</span> <span class="n">rc</span><span class="o">=</span><span class="n">rc</span><span class="p">,</span> <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span> 
+                <span class="n">ghowner</span><span class="o">=</span><span class="n">ghowner</span><span class="p">,</span> <span class="n">ghrepo</span><span class="o">=</span><span class="n">ghrepo</span><span class="p">,</span> <span class="n">pr</span><span class="o">=</span><span class="n">pr</span><span class="p">,</span> <span class="n">pages</span><span class="o">=</span><span class="n">pages</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">resp</span><span class="p">,</span> <span class="n">event</span></div>
 </pre></div>
 
           </div>

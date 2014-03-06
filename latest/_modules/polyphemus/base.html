@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>polyphemus.base &mdash; polyphemus 0.1 documentation</title>
+    <title>polyphemus.base &mdash; polyphemus 0.2-dev documentation</title>
     
     <link rel="stylesheet" href="../../_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -18,7 +18,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
-        VERSION:     '0.1',
+        VERSION:     '0.2-dev',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -30,7 +30,7 @@
     <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
     <script type="text/javascript" src="../../_static/cloud.js"></script>
     <link rel="shortcut icon" href="../../_static/polyphemus.ico"/>
-    <link rel="top" title="polyphemus 0.1 documentation" href="../../index.html" />
+    <link rel="top" title="polyphemus 0.2-dev documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
         <meta name="viewport" content="width=device-width, initial-scale=1">
   </head>
@@ -49,7 +49,7 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
-    <li><a href="../../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+    <li><a href="../../index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
 
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
@@ -116,12 +116,14 @@
         <span class="n">debug_filename</span><span class="o">=</span><span class="s">&#39;debug.txt&#39;</span><span class="p">,</span>
         <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
         <span class="n">version</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">only_setup</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
         <span class="n">bash_completion</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
         <span class="n">host</span><span class="o">=</span><span class="s">&#39;0.0.0.0&#39;</span><span class="p">,</span>
         <span class="n">port</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span>
         <span class="n">appname</span><span class="o">=</span><span class="s">&quot;polyphemus&quot;</span><span class="p">,</span>
         <span class="n">server_url</span><span class="o">=</span><span class="n">NotSpecified</span><span class="p">,</span>
         <span class="n">ssh_key_file</span><span class="o">=</span><span class="s">&#39;~/.ssh/id_rsa&#39;</span><span class="p">,</span> 
+        <span class="n">flask_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;static_url_path&#39;</span><span class="p">:</span> <span class="s">&#39;/static&#39;</span><span class="p">},</span>
         <span class="p">)</span>
 
     <span class="n">rcdocs</span> <span class="o">=</span> <span class="p">{</span>
@@ -131,6 +133,7 @@
         <span class="s">&#39;debug_filename&#39;</span><span class="p">:</span> <span class="s">&#39;the path to the debug file&#39;</span><span class="p">,</span> 
         <span class="s">&#39;verbose&#39;</span><span class="p">:</span> <span class="s">&quot;Print more output.&quot;</span><span class="p">,</span>
         <span class="s">&#39;version&#39;</span><span class="p">:</span> <span class="s">&quot;Print version information.&quot;</span><span class="p">,</span>
+        <span class="s">&#39;only_setup&#39;</span><span class="p">:</span> <span class="s">&quot;Only runs the setup phase of all plugins&quot;</span><span class="p">,</span>
         <span class="s">&#39;bash_completion&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;Flag for enabling / disabling BASH completion. &quot;</span>
                             <span class="s">&quot;This is only relevant when using argcomplete.&quot;</span><span class="p">),</span>
         <span class="s">&#39;host&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;Which urls to host to, ie &#39;0.0.0.0&#39; for everyone or &quot;</span>
@@ -143,7 +146,10 @@
         <span class="s">&#39;ssh_key_file&#39;</span><span class="p">:</span> <span class="p">(</span><span class="s">&quot;The location of an SSH RSA key to use for authentication, &quot;</span>
                          <span class="s">&quot;defaults to &#39;~/.ssh/id_rsa&#39;. If this file does not exist &quot;</span>
                          <span class="s">&quot;a key will be generated at this location.&quot;</span><span class="p">),</span>
+        <span class="s">&#39;flask_kwargs&#39;</span><span class="p">:</span> <span class="s">&quot;keyword argumnets submitted to Flask() constructor.&quot;</span><span class="p">,</span>
         <span class="p">}</span>
+
+    <span class="n">rcupdaters</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;flask_kwargs&#39;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">:</span> <span class="n">old</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">new</span><span class="p">)</span> <span class="ow">or</span> <span class="n">old</span><span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">update_argparser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--rc&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&#39;rc&#39;</span><span class="p">])</span>
@@ -156,6 +162,8 @@
                             <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;verbose&quot;</span><span class="p">])</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--version&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;version&#39;</span><span class="p">,</span>
                             <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;version&quot;</span><span class="p">])</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--only-setup&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;only_setup&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;only_setup&quot;</span><span class="p">])</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--host&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&#39;host&#39;</span><span class="p">])</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--port&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&#39;port&#39;</span><span class="p">])</span>
         <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--appname&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&#39;appname&#39;</span><span class="p">])</span>
@@ -252,7 +260,7 @@
         <li class="right" >
           <a href="../../np-modindex.html" title="Python Module Index"
              >modules</a> &nbsp; &nbsp;</li>
-    <li><a href="../../index.html">polyphemus 0.1 documentation</a> &raquo;</li>
+    <li><a href="../../index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
 
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>

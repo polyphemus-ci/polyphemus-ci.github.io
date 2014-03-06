@@ -1,0 +1,180 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>polyphemus.swcpage &mdash; polyphemus 0.2-dev documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/numpy_friendly.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../_static/cloud.js"></script>
+    <link rel="shortcut icon" href="../../_static/polyphemus.ico"/>
+    <link rel="top" title="polyphemus 0.2-dev documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
+
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for polyphemus.swcpage</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;This provides a 3-way diff comparison for rendered HTML pages. The URLs</span>
+<span class="sd">routed by this extension show the original version of the page, the pull requested </span>
+<span class="sd">version of the page, and a visual diff of the two.</span>
+
+<span class="sd">This module is available as an polyphemus plugin by the name `polyphemus.swcpage`.</span>
+
+<span class="sd">Software Carpentry 3-Way Page Diff API</span>
+<span class="sd">======================================</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">pprint</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="nb">basestring</span> <span class="o">=</span> <span class="nb">str</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">simplejson</span> <span class="kn">as</span> <span class="nn">json</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="kn">import</span> <span class="n">request</span><span class="p">,</span> <span class="n">render_template</span>
+
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">RunControl</span><span class="p">,</span> <span class="n">NotSpecified</span><span class="p">,</span> <span class="n">PersistentCache</span>
+<span class="kn">from</span> <span class="nn">.plugins</span> <span class="kn">import</span> <span class="n">Plugin</span>
+<span class="kn">from</span> <span class="nn">.event</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">runfor</span>
+
+<div class="viewcode-block" id="PolyphemusPlugin"><a class="viewcode-back" href="../../api/swcpage.html#polyphemus.swcpage.PolyphemusPlugin">[docs]</a><span class="k">class</span> <span class="nc">PolyphemusPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class routes the swcpage dashboard.&quot;&quot;&quot;</span>
+
+    <span class="n">requires</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;polyphemus.swcbase&#39;</span><span class="p">,)</span>
+
+    <span class="n">route</span> <span class="o">=</span> <span class="s">&#39;/&lt;ghowner&gt;/&lt;ghrepo&gt;/&lt;int:pr&gt;/&lt;path:page&gt;&#39;</span>
+
+    <span class="n">request_methods</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;GET&#39;</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rc</span><span class="p">,</span> <span class="n">ghowner</span><span class="p">,</span> <span class="n">ghrepo</span><span class="p">,</span> <span class="n">pr</span><span class="p">,</span> <span class="n">page</span><span class="p">):</span>
+        <span class="n">resp</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="n">stat_path</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">flask_kwargs</span><span class="p">[</span><span class="s">&#39;static_url_path&#39;</span><span class="p">]</span>  <span class="c"># must start with &#39;/&#39;</span>
+        <span class="n">server_url</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">server_url</span>
+        <span class="n">url_prefix</span> <span class="o">=</span> <span class="n">server_url</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">stat_path</span> <span class="k">if</span> <span class="n">server_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span> <span class="k">else</span> \
+                     <span class="n">server_url</span> <span class="o">+</span> <span class="n">stat_path</span>
+        <span class="n">orp_path</span> <span class="o">=</span> <span class="s">&quot;{0}-{1}-{2}/&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ghowner</span><span class="p">,</span> <span class="n">ghrepo</span><span class="p">,</span> <span class="n">pr</span><span class="p">)</span>
+        <span class="n">url_prefix</span> <span class="o">=</span> <span class="n">url_prefix</span> <span class="o">+</span> <span class="n">orp_path</span> <span class="k">if</span> <span class="n">url_prefix</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span> <span class="k">else</span> \
+                     <span class="n">url_prefix</span> <span class="o">+</span> <span class="s">&#39;/&#39;</span> <span class="o">+</span> <span class="n">orp_path</span>
+        <span class="n">ppath</span><span class="p">,</span> <span class="n">pname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">page</span><span class="p">)</span>
+        <span class="n">base_url</span> <span class="o">=</span> <span class="n">url_prefix</span> <span class="o">+</span> <span class="s">&quot;base/_site/&quot;</span> <span class="o">+</span> <span class="n">page</span>
+        <span class="n">head_url</span> <span class="o">=</span> <span class="n">url_prefix</span> <span class="o">+</span> <span class="s">&quot;head/_site/&quot;</span> <span class="o">+</span> <span class="n">page</span>
+        <span class="n">diff_url</span> <span class="o">=</span> <span class="n">url_prefix</span> <span class="o">+</span> <span class="s">&quot;head/_site/&quot;</span> <span class="o">+</span> <span class="n">ppath</span> <span class="o">+</span> <span class="s">&#39;/diff-&#39;</span> <span class="o">+</span> <span class="n">pname</span>
+
+        <span class="n">resp</span> <span class="o">=</span> <span class="n">render_template</span><span class="p">(</span><span class="s">&quot;swcpage.html&quot;</span><span class="p">,</span> <span class="n">rc</span><span class="o">=</span><span class="n">rc</span><span class="p">,</span> <span class="n">request</span><span class="o">=</span><span class="n">request</span><span class="p">,</span> 
+                <span class="n">ghowner</span><span class="o">=</span><span class="n">ghowner</span><span class="p">,</span> <span class="n">ghrepo</span><span class="o">=</span><span class="n">ghrepo</span><span class="p">,</span> <span class="n">pr</span><span class="o">=</span><span class="n">pr</span><span class="p">,</span> <span class="n">page</span><span class="o">=</span><span class="n">page</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span><span class="p">,</span> 
+                <span class="n">head_url</span><span class="o">=</span><span class="n">head_url</span><span class="p">,</span> <span class="n">diff_url</span><span class="o">=</span><span class="n">diff_url</span><span class="p">)</span>
+        <span class="c">#resp = &quot;No polyphemus dashboard found.&quot;</span>
+        <span class="k">return</span> <span class="n">resp</span><span class="p">,</span> <span class="n">event</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="../../index.html">
+          <img class="logo" src="../../_static/polyphemus.gif" alt="Logo"/>
+        </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
+
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Anthony Scopatz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

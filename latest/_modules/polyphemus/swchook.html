@@ -1,0 +1,340 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>polyphemus.swchook &mdash; polyphemus 0.2-dev documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/numpy_friendly.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.2-dev',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="../../_static/cloud.js"></script>
+    <link rel="shortcut icon" href="../../_static/polyphemus.ico"/>
+    <link rel="top" title="polyphemus 0.2-dev documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
+
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for polyphemus.swchook</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;The plug in to check SWC website changes.</span>
+
+<span class="sd">This module is available as an polyphemus plugin by the name ``polyphemus.swchook``.</span>
+
+<span class="sd">SWC Hook API</span>
+<span class="sd">============</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">cgi</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
+
+<span class="kn">import</span> <span class="nn">lxml.html</span>
+<span class="kn">import</span> <span class="nn">lxml.etree</span>
+<span class="kn">from</span> <span class="nn">lxml.html.diff</span> <span class="kn">import</span> <span class="n">htmldiff</span><span class="p">,</span> <span class="n">html_annotate</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">simplejson</span> <span class="kn">as</span> <span class="nn">json</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">import</span> <span class="nn">github3</span>
+
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">RunControl</span><span class="p">,</span> <span class="n">NotSpecified</span><span class="p">,</span> <span class="n">PersistentCache</span>
+<span class="kn">from</span> <span class="nn">.plugins</span> <span class="kn">import</span> <span class="n">Plugin</span>
+<span class="kn">from</span> <span class="nn">.event</span> <span class="kn">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">runfor</span>
+<span class="kn">from</span> <span class="nn">.githubbase</span> <span class="kn">import</span> <span class="n">set_pull_request_status</span>
+<span class="kn">from</span> <span class="nn">.swcbase</span> <span class="kn">import</span> <span class="n">HTML_EXTS</span><span class="p">,</span> <span class="n">KNOWN_EXTS</span>
+
+<span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+    <span class="nb">basestring</span> <span class="o">=</span> <span class="nb">str</span>
+
+<span class="n">clone_template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;git clone {url} {dir}&quot;&quot;&quot;</span>
+
+<span class="n">checkout_template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;git checkout {commit}&quot;&quot;&quot;</span>
+
+<span class="n">rem_add_template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;git remote add {branch} {url}&quot;&quot;&quot;</span>
+
+<span class="n">fetch_template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;git fetch {branch}&quot;&quot;&quot;</span>
+
+<span class="n">merge_template</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;git merge {branch}/{commit}&quot;&quot;&quot;</span>
+
+<span class="n">build_html</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;make clean; make cache; make check;&quot;&quot;&quot;</span>
+
+<span class="n">head_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;&lt;\s*head\s*&gt;&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">S</span> <span class="o">|</span> <span class="n">re</span><span class="o">.</span><span class="n">I</span><span class="p">)</span>
+
+<span class="n">ins_del_stylesheet</span> <span class="o">=</span> <span class="s">u&#39;&#39;&#39;</span>
+<span class="s">ins { background-color: #aaffaa; text-decoration: none }</span>
+<span class="s">del { background-color: #ff8888; text-decoration: line-through }</span>
+<span class="s">&#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="add_stylesheet"><a class="viewcode-back" href="../../api/swchook.html#polyphemus.swchook.add_stylesheet">[docs]</a><span class="k">def</span> <span class="nf">add_stylesheet</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="n">ss</span><span class="o">=</span><span class="n">ins_del_stylesheet</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds a stylesheet to the end of an element.&quot;&quot;&quot;</span>
+    <span class="n">s</span> <span class="o">=</span> <span class="n">lxml</span><span class="o">.</span><span class="n">etree</span><span class="o">.</span><span class="n">Element</span><span class="p">(</span><span class="s">&#39;style&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s">&quot;text/css&quot;</span><span class="p">)</span>
+    <span class="n">s</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">ss</span>
+    <span class="n">elem</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</div>
+<span class="k">def</span> <span class="nf">clone_repo</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="nb">dir</span><span class="p">):</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span>
+        <span class="n">clone_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">url</span><span class="p">,</span> <span class="nb">dir</span><span class="o">=</span><span class="nb">dir</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> 
+        <span class="n">cwd</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="n">shell</span><span class="o">=</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;nt&#39;</span><span class="p">))</span>
+    
+<span class="k">def</span> <span class="nf">checkout_commit</span><span class="p">(</span><span class="n">commit</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">cwd</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span>
+        <span class="n">checkout_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">commit</span><span class="o">=</span><span class="n">commit</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> 
+        <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;nt&#39;</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">add_fetch_remote</span><span class="p">(</span><span class="n">rem_branch</span><span class="p">,</span> <span class="n">rem_url</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">cwd</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">cwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span>
+        <span class="n">rem_add_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">branch</span><span class="o">=</span><span class="n">rem_branch</span><span class="p">,</span> <span class="n">url</span><span class="o">=</span><span class="n">rem_url</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> 
+        <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;nt&#39;</span><span class="p">))</span>
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span>
+        <span class="n">fetch_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">branch</span><span class="o">=</span><span class="n">rem_branch</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> 
+        <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;nt&#39;</span><span class="p">))</span>
+
+<span class="k">def</span> <span class="nf">merge_commit</span><span class="p">(</span><span class="n">merge_branch</span><span class="p">,</span> <span class="n">merge_ref</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>    
+    <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span>
+        <span class="n">merge_template</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">branch</span><span class="o">=</span><span class="n">merge_branch</span><span class="p">,</span> 
+                              <span class="n">commit</span><span class="o">=</span><span class="n">merge_ref</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> 
+        <span class="n">cwd</span><span class="o">=</span><span class="n">cwd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s">&#39;nt&#39;</span><span class="p">))</span>
+        
+<div class="viewcode-block" id="PolyphemusPlugin"><a class="viewcode-back" href="../../api/swchook.html#polyphemus.swchook.PolyphemusPlugin">[docs]</a><span class="k">class</span> <span class="nc">PolyphemusPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class provides functionality for comparing SWC website PRs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">requires</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;polyphemus.swcbase&#39;</span><span class="p">,)</span>
+
+    <span class="n">defaultrc</span> <span class="o">=</span> <span class="n">RunControl</span><span class="p">(</span>
+        <span class="n">flask_kwargs</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;static_folder&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">(),</span> <span class="s">&#39;static&#39;</span><span class="p">)}</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="nf">_build_base_html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+        <span class="n">base_repo</span> <span class="o">=</span> <span class="n">github3</span><span class="o">.</span><span class="n">repository</span><span class="p">(</span><span class="o">*</span><span class="n">base</span><span class="o">.</span><span class="n">repo</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updater</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="s">&#39;pending&#39;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&quot;Getting base repository.&quot;</span><span class="p">)</span>
+        <span class="n">clone_repo</span><span class="p">(</span><span class="n">base_repo</span><span class="o">.</span><span class="n">clone_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">)</span>
+        <span class="n">checkout_commit</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updater</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="s">&#39;pending&#39;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&quot;Building base website.&quot;</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">build_html</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_head_html</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">base</span><span class="p">,</span> <span class="n">head</span><span class="p">):</span>        
+        <span class="n">head_repo</span> <span class="o">=</span> <span class="n">github3</span><span class="o">.</span><span class="n">repository</span><span class="p">(</span><span class="o">*</span><span class="n">head</span><span class="o">.</span><span class="n">repo</span><span class="p">)</span>
+        <span class="n">base_repo</span> <span class="o">=</span> <span class="n">github3</span><span class="o">.</span><span class="n">repository</span><span class="p">(</span><span class="o">*</span><span class="n">base</span><span class="o">.</span><span class="n">repo</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span><span class="p">)</span>
+                
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updater</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="s">&#39;pending&#39;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&quot;Getting head repository.&quot;</span><span class="p">)</span>
+        <span class="n">clone_repo</span><span class="p">(</span><span class="n">head_repo</span><span class="o">.</span><span class="n">clone_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span><span class="p">)</span>
+        <span class="n">add_fetch_remote</span><span class="p">(</span><span class="s">&quot;upstream&quot;</span><span class="p">,</span> <span class="n">base_repo</span><span class="o">.</span><span class="n">clone_url</span><span class="p">,</span> 
+                         <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span><span class="p">)</span>
+        <span class="n">checkout_commit</span><span class="p">(</span><span class="n">base</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span><span class="p">)</span>
+        <span class="n">merge_commit</span><span class="p">(</span><span class="s">&quot;origin&quot;</span><span class="p">,</span> <span class="n">head</span><span class="o">.</span><span class="n">ref</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updater</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="s">&#39;pending&#39;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&quot;Building head website.&quot;</span><span class="p">)</span>
+        <span class="n">subprocess</span><span class="o">.</span><span class="n">check_call</span><span class="p">(</span><span class="n">build_html</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_generate_diffs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updater</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+            <span class="n">status</span><span class="o">=</span><span class="s">&#39;pending&#39;</span><span class="p">,</span> 
+            <span class="n">description</span><span class="o">=</span><span class="s">&quot;Creating head and base website diffs.&quot;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">:</span>
+            <span class="n">froot</span><span class="p">,</span> <span class="n">fext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">fext</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">HTML_EXTS</span><span class="p">:</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">froot</span> <span class="o">+</span> <span class="s">&#39;.html&#39;</span>
+            <span class="n">f</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;_site&quot;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+            <span class="n">fpath</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+            <span class="n">head</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+            <span class="n">diff</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span><span class="p">,</span> <span class="n">fpath</span><span class="p">,</span> <span class="s">&quot;diff-&quot;</span> <span class="o">+</span> <span class="n">fname</span><span class="p">)</span>
+
+            <span class="c"># if addition or deletion, just skip</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">head</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">base</span><span class="p">):</span>
+                <span class="k">continue</span>
+
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">doc1</span> <span class="o">=</span> <span class="n">lxml</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+ 
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">doc2</span> <span class="o">=</span> <span class="n">lxml</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+ 
+            <span class="n">doc1body</span> <span class="o">=</span> <span class="n">doc1</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">)</span>
+            <span class="n">doc2body</span> <span class="o">=</span> <span class="n">doc2</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;body&#39;</span><span class="p">)</span>
+
+            <span class="n">bodydiff</span> <span class="o">=</span> <span class="n">htmldiff</span><span class="p">(</span><span class="n">lxml</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">doc1body</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">),</span>
+                                <span class="n">lxml</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">doc2body</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
+            <span class="n">doc2head</span> <span class="o">=</span> <span class="n">doc2</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s">&#39;head&#39;</span><span class="p">)</span>
+            <span class="n">add_stylesheet</span><span class="p">(</span><span class="n">doc2head</span><span class="p">)</span>
+            <span class="n">diffdoc</span> <span class="o">=</span> <span class="s">u&#39;&lt;html&gt;</span><span class="se">\n</span><span class="s">{0}</span><span class="se">\n</span><span class="s">&lt;body&gt;</span><span class="se">\n</span><span class="s">{1}</span><span class="se">\n</span><span class="s">&lt;/body&gt;</span><span class="se">\n</span><span class="s">&lt;/html&gt;&#39;</span>
+            <span class="n">diffdoc</span> <span class="o">=</span> <span class="n">diffdoc</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">lxml</span><span class="o">.</span><span class="n">html</span><span class="o">.</span><span class="n">tostring</span><span class="p">(</span><span class="n">doc2head</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">),</span> <span class="n">bodydiff</span><span class="p">)</span>
+
+            <span class="k">with</span> <span class="n">io</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">diff</span><span class="p">,</span> <span class="s">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">diffdoc</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s">&#39;utf-8&#39;</span><span class="p">))</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&quot;diff&#39;d {0!r}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">diff</span><span class="p">))</span>
+
+    <span class="nd">@runfor</span><span class="p">(</span><span class="s">&#39;swc-hook&#39;</span><span class="p">,</span> <span class="s">&#39;github-pr-new&#39;</span><span class="p">,</span> <span class="s">&#39;github-pr-sync&#39;</span><span class="p">)</span>                    
+    <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rc</span><span class="p">):</span>
+        <span class="n">event_name</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">pr</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">data</span>  <span class="c"># pull request object</span>
+
+        <span class="n">rc</span><span class="o">.</span><span class="n">event</span> <span class="o">=</span> <span class="n">Event</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&#39;swc-status&#39;</span><span class="p">,</span> 
+                         <span class="n">data</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;status&#39;</span><span class="p">:</span> <span class="s">&#39;error&#39;</span><span class="p">,</span> 
+                               <span class="s">&#39;number&#39;</span><span class="p">:</span> <span class="n">pr</span><span class="o">.</span><span class="n">number</span><span class="p">,</span> 
+                               <span class="s">&#39;description&#39;</span><span class="p">:</span> <span class="s">&#39;&#39;</span><span class="p">})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updater</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">data</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">pr</span><span class="o">.</span><span class="n">mergeable</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Error, PR #{0} is not mergeable.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
+            <span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="ne">RuntimeWarning</span><span class="p">)</span>
+            <span class="n">rc</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s">&#39;status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;failure&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_updater</span><span class="p">[</span><span class="s">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">msg</span>
+            <span class="k">return</span> 
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="o">*</span><span class="n">f</span><span class="o">.</span><span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;/&quot;</span><span class="p">))</span> 
+                       <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">pr</span><span class="o">.</span><span class="n">iter_files</span><span class="p">()]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span> <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">f</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">KNOWN_EXTS</span><span class="p">]</span>
+
+        <span class="n">orp</span> <span class="o">=</span> <span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">github_owner</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">github_repo</span><span class="p">,</span> <span class="n">pr</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
+        <span class="n">stat_dir</span> <span class="o">=</span> <span class="n">rc</span><span class="o">.</span><span class="n">flask_kwargs</span><span class="p">[</span><span class="s">&#39;static_folder&#39;</span><span class="p">]</span>
+        <span class="n">orp_dir</span> <span class="o">=</span> <span class="s">&quot;{0}-{1}-{2}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">orp</span><span class="p">)</span>
+        <span class="n">stat_orp_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stat_dir</span><span class="p">,</span> <span class="n">orp_dir</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stat_orp_dir</span><span class="p">,</span> <span class="s">&quot;base&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stat_orp_dir</span><span class="p">,</span> <span class="s">&quot;head&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">stat_orp_dir</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">stat_orp_dir</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_head_html</span><span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">base</span><span class="p">,</span> <span class="n">pr</span><span class="o">.</span><span class="n">head</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build_base_html</span><span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">base</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_generate_diffs</span><span class="p">()</span>
+
+        <span class="n">cache</span> <span class="o">=</span> <span class="n">PersistentCache</span><span class="p">(</span><span class="n">cachefile</span><span class="o">=</span><span class="n">rc</span><span class="o">.</span><span class="n">swc_cache</span><span class="p">)</span>
+        <span class="n">cache</span><span class="p">[</span><span class="n">orp</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;base&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_base_dir</span><span class="p">,</span>
+                      <span class="s">&#39;head&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_head_dir</span><span class="p">,</span>
+                      <span class="s">&#39;files&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_files</span><span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_updater</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">status</span><span class="o">=</span><span class="s">&#39;success&#39;</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s">&quot;comparison available.&quot;</span><span class="p">,</span> 
+                             <span class="n">target_url</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">rc</span><span class="o">.</span><span class="n">server_url</span><span class="p">,</span> <span class="n">rc</span><span class="o">.</span><span class="n">github_owner</span><span class="p">,</span> 
+                                                     <span class="n">rc</span><span class="o">.</span><span class="n">github_repo</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">pr</span><span class="o">.</span><span class="n">number</span><span class="p">)))</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="../../index.html">
+          <img class="logo" src="../../_static/polyphemus.gif" alt="Logo"/>
+        </a></p>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="../../np-modindex.html" title="Python Module Index"
+             >modules</a> &nbsp; &nbsp;</li>
+    <li><a href="../../index.html">polyphemus 0.2-dev documentation</a> &raquo;</li>
+
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2013, Anthony Scopatz.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

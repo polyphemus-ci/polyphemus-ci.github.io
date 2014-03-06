@@ -9,7 +9,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>polyphemus.github &mdash; polyphemus 0.2-dev documentation</title>
+    <title>polyphemus.swcbase &mdash; polyphemus 0.2-dev documentation</title>
     
     <link rel="stylesheet" href="../../_static/numpy_friendly.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -62,26 +62,45 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <h1>Source code for polyphemus.github</h1><div class="highlight"><pre>
-<span class="sd">&quot;&quot;&quot;The plugin to enable github functionality.</span>
+  <h1>Source code for polyphemus.swcbase</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;The basic functionality for SWC website plugins</span>
 
-<span class="sd">This module is available as an polyphemus plugin by the name ``polyphemus.github``.</span>
+<span class="sd">This module is available as an polyphemus plugin by the name `polyphemus.swcbase`.</span>
 
-<span class="sd">GitHub API</span>
-<span class="sd">=================</span>
+<span class="sd">Basic SWC API</span>
+<span class="sd">=============</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">warnings</span> <span class="kn">import</span> <span class="n">warn</span>
 
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">RunControl</span><span class="p">,</span> <span class="n">NotSpecified</span><span class="p">,</span> <span class="n">writenewonly</span><span class="p">,</span> \
+    <span class="n">DEFAULT_RC_FILE</span><span class="p">,</span> <span class="n">DEFAULT_PLUGINS</span><span class="p">,</span> <span class="n">nyansep</span><span class="p">,</span> <span class="n">indent</span><span class="p">,</span> <span class="n">check_cmd</span>
 <span class="kn">from</span> <span class="nn">.plugins</span> <span class="kn">import</span> <span class="n">Plugin</span>
 
 <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
     <span class="nb">basestring</span> <span class="o">=</span> <span class="nb">str</span>
 
-<div class="viewcode-block" id="PolyphemusPlugin"><a class="viewcode-back" href="../../api/github.html#polyphemus.github.PolyphemusPlugin">[docs]</a><span class="k">class</span> <span class="nc">PolyphemusPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This class enables all github functionality.&quot;&quot;&quot;</span>
+<span class="n">HTML_EXTS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;.html&#39;</span><span class="p">,</span> <span class="s">&#39;.htm&#39;</span><span class="p">])</span>
 
-    <span class="n">requires</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;polyphemus.githubhook&#39;</span><span class="p">,</span> <span class="s">&#39;polyphemus.githubstat&#39;</span><span class="p">)</span></div>
+<span class="n">KNOWN_EXTS</span> <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="s">&#39;.html&#39;</span><span class="p">,</span> <span class="s">&#39;.htm&#39;</span><span class="p">,</span> <span class="s">&#39;.ipynb&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="PolyphemusPlugin"><a class="viewcode-back" href="../../api/swcbase.html#polyphemus.swcbase.PolyphemusPlugin">[docs]</a><span class="k">class</span> <span class="nc">PolyphemusPlugin</span><span class="p">(</span><span class="n">Plugin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;This class provides basic Software Carpentry functionality.&quot;&quot;&quot;</span>
+
+    <span class="n">requires</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;polyphemus.base&#39;</span><span class="p">,)</span>
+
+    <span class="n">defaultrc</span> <span class="o">=</span> <span class="n">RunControl</span><span class="p">(</span><span class="n">swc_cache</span><span class="o">=</span><span class="s">&#39;swc.cache&#39;</span><span class="p">)</span>
+
+    <span class="n">rcdocs</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;swc_cache&#39;</span><span class="p">:</span> <span class="s">&#39;Filename for software carpentry cache.&#39;</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">update_argparser</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser</span><span class="p">):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--swc-cache&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;swc_cache&#39;</span><span class="p">,</span>
+                            <span class="n">help</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">rcdocs</span><span class="p">[</span><span class="s">&quot;swc_cache&quot;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rc</span><span class="p">):</span>
+        <span class="k">pass</span></div>
 </pre></div>
 
           </div>
